@@ -882,10 +882,10 @@
 <div id="toast"></div>
 
 <script type="module">
-// ===== FIREBASE + BASE DE DATOS =====
+// ===== FIREBASE — script de módulo aislado =====
 import { initializeApp }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc, writeBatch }
+import { getFirestore, collection, getDocs, doc, writeBatch }
   from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
 
 const _fbApp = initializeApp({
@@ -895,18 +895,15 @@ const _fbApp = initializeApp({
 });
 const _fs = getFirestore(_fbApp);
 
-// Cache local — se carga una vez en init(), luego se mantiene sincronizado
 const _cache = {
   productos: [], servicios: [], ventas: [],
   servicios_reg: [], compras: [], gastos: []
 };
 
-const DB = {
-  // Lectura síncrona desde cache (todas las funciones de render siguen igual)
+// Exponer DB en window para que el script normal lo use
+window.DB = {
   get:    (key) => _cache[key] ?? [],
   getObj: (key, def) => _cache[key] ?? def,
-
-  // Escritura: actualiza cache + persiste en Firestore (write-through)
   set: async (key, data) => {
     _cache[key] = data;
     const col = collection(_fs, key);
@@ -919,8 +916,6 @@ const DB = {
     });
     await batch.commit();
   },
-
-  // Carga todas las colecciones desde Firestore al arrancar
   loadAll: async () => {
     const keys = ['productos','servicios','ventas','servicios_reg','compras','gastos'];
     await Promise.all(keys.map(async key => {
@@ -929,6 +924,14 @@ const DB = {
     }));
   }
 };
+
+// Avisar al script normal que Firebase está listo
+window._firebaseReady = true;
+document.dispatchEvent(new Event('firebase-ready'));
+</script>
+
+<script>
+// ===== APLICACIÓN PRINCIPAL — script normal (sin módulo) =====
 
 // ===== SERVICIOS PREDETERMINADOS =====
 const SERVICIOS_DEFAULT = [
@@ -1237,17 +1240,6 @@ async function init() {
   renderDashboard();
   poblarFiltrosCategorias();
 
-  // Vincular menú móvil
-  const _hambtn = document.getElementById('mob-hamburger');
-  if(_hambtn) _hambtn.addEventListener('click', toggleMobMenu);
-  const _mobOverlay = document.getElementById('mob-overlay');
-  if(_mobOverlay) _mobOverlay.addEventListener('click', closeMobMenu);
-  // Cerrar menú al tocar cualquier opción
-  document.querySelectorAll('.nav-item').forEach(function(n) {
-    n.addEventListener('click', function() {
-      if(window.innerWidth <= 768) closeMobMenu();
-    });
-  });
 }
 
 // ===== NAVEGACIÓN =====
@@ -1987,24 +1979,45 @@ document.querySelectorAll('.modal-overlay').forEach(m => {
 });
 
 // ===== INIT =====
-document.addEventListener('DOMContentLoaded', init);
-
-// ── Exponer funciones al scope global (requerido por type="module") ──
-Object.assign(window, {
-  navigate, toast, setFiltroInv, sortInventario,
-  abrirModalProducto, editarProducto, guardarProducto, eliminarProducto,
-  buscarProductoVenta, seleccionarProductoVenta, actualizarPrecioServicio,
-  calcularVenta, registrarVenta, limpiarVenta,
-  buscarProductoCompra, seleccionarProductoCompra, registrarCompra, limpiarCompra,
-  registrarGasto, limpiarGasto,
-  renderServiciosReg, abrirSrvRapido, calcularSrvRapido, registrarServicioRapido,
-  renderCatalogoServicios, abrirModalServicio, editarServicio, guardarServicio, eliminarServicio,
-  renderHistVentas, renderHistServicios, renderHistCompras, renderHistGastos,
-  renderReportes, exportarCSV, imprimirReporte,
-  cerrarModal, integrarServiciosEnInventario, recargarInventarioFactura,
-  renderQueComprar, exportarListaCompra, renderAccesosRapidos,
-  guardarCopia, restaurarCopia,
+// Esperar a que Firebase esté listo antes de iniciar la app
+document.addEventListener('firebase-ready', function() {
+  init();
 });
+// Fallback: si firebase-ready ya se disparó antes de este script
+if(window._firebaseReady) init();
+
+// ── Menú móvil — completamente independiente de Firebase e init() ──
+// Usa DOMContentLoaded para garantizar que el DOM existe
+document.addEventListener('DOMContentLoaded', function() {
+  var hambtn = document.getElementById('mob-hamburger');
+  var overlay = document.getElementById('mob-overlay');
+  var sidebar = document.getElementById('sidebar');
+
+  if(hambtn) {
+    hambtn.addEventListener('click', function(e) {
+      e.stopPropagation();
+      sidebar.classList.toggle('mob-open');
+      overlay.classList.toggle('show');
+    });
+  }
+  if(overlay) {
+    overlay.addEventListener('click', function() {
+      sidebar.classList.remove('mob-open');
+      overlay.classList.remove('show');
+    });
+  }
+  // Cerrar al tocar una opción del menú
+  document.querySelectorAll('.nav-item').forEach(function(item) {
+    item.addEventListener('click', function() {
+      if(window.innerWidth <= 768) {
+        sidebar.classList.remove('mob-open');
+        overlay.classList.remove('show');
+      }
+    });
+  });
+});
+
+// Funciones disponibles globalmente (script normal, no módulo)
 
 
 // ════════════════════════════════════════════════
@@ -2368,8 +2381,7 @@ function closeMobMenu() {
   document.getElementById('mob-overlay').classList.remove('show');
 }
 // Exponer funciones móvil al scope global
-window.toggleMobMenu = toggleMobMenu;
-window.closeMobMenu = closeMobMenu;
+
 
 </script>
 </body>
