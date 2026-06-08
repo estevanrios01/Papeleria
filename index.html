@@ -251,7 +251,7 @@
       border-bottom: 1px solid var(--border);
       align-items: center;
       padding: 0 16px;
-      z-index: 198;
+      z-index: 201;
       gap: 12px;
     }
     #mob-topbar .mob-title {
@@ -261,9 +261,16 @@
     }
     #mob-hamburger {
       background: none; border: none;
-      color: var(--text); font-size: 24px;
-      cursor: pointer; padding: 4px 8px;
+      color: var(--text); font-size: 26px;
+      cursor: pointer;
+      padding: 0;
+      width: 44px; height: 44px;
+      display: flex; align-items: center; justify-content: center;
+      border-radius: 8px;
+      -webkit-tap-highlight-color: rgba(245,200,66,0.2);
+      touch-action: manipulation;
     }
+    #mob-hamburger:active { background: rgba(245,200,66,0.15); }
 
     /* Main: ocupa toda la pantalla, con espacio para la topbar */
     #main {
@@ -351,10 +358,10 @@
 
 <!-- BARRA SUPERIOR MÓVIL -->
 <div id="mob-topbar">
-  <button id="mob-hamburger" onclick="toggleMobMenu()">☰</button>
+  <button id="mob-hamburger" aria-label="Abrir menú">☰</button>
   <span class="mob-title">📋 PapeléríaPro</span>
 </div>
-<div id="mob-overlay" onclick="closeMobMenu()"></div>
+<div id="mob-overlay"></div>
 
 
 <!-- SIDEBAR -->
@@ -1229,6 +1236,18 @@ async function init() {
   ['compra-fecha','gasto-fecha'].forEach(id => { const el = document.getElementById(id); if(el) el.value = fechaStr; });
   renderDashboard();
   poblarFiltrosCategorias();
+
+  // Vincular menú móvil
+  const _hambtn = document.getElementById('mob-hamburger');
+  if(_hambtn) _hambtn.addEventListener('click', toggleMobMenu);
+  const _mobOverlay = document.getElementById('mob-overlay');
+  if(_mobOverlay) _mobOverlay.addEventListener('click', closeMobMenu);
+  // Cerrar menú al tocar cualquier opción
+  document.querySelectorAll('.nav-item').forEach(function(n) {
+    n.addEventListener('click', function() {
+      if(window.innerWidth <= 768) closeMobMenu();
+    });
+  });
 }
 
 // ===== NAVEGACIÓN =====
@@ -2348,15 +2367,9 @@ function closeMobMenu() {
   document.getElementById('sidebar').classList.remove('mob-open');
   document.getElementById('mob-overlay').classList.remove('show');
 }
-// Cerrar menú al navegar en móvil
-const _origNavigate = window.navigate;
-// Cerrar menú móvil al navegar
-const _navItems = document.querySelectorAll('.nav-item');
-_navItems.forEach(n => {
-  n.addEventListener('click', () => {
-    if(window.innerWidth <= 768) closeMobMenu();
-  });
-});
+// Exponer funciones móvil al scope global
+window.toggleMobMenu = toggleMobMenu;
+window.closeMobMenu = closeMobMenu;
 
 </script>
 </body>
