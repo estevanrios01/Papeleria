@@ -1,0 +1,2137 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PapeléríaPro — Sistema de Administración</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0f0f13;
+    --surface: #18181f;
+    --surface2: #22222c;
+    --border: #2e2e3a;
+    --accent: #f5c842;
+    --accent2: #e8a020;
+    --text: #f0eff5;
+    --muted: #8a8a9a;
+    --danger: #e05c5c;
+    --success: #4caf7d;
+    --info: #5b9cf6;
+    --radius: 12px;
+    --radius-sm: 8px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; }
+
+  /* SIDEBAR */
+  #sidebar {
+    width: 230px; min-height: 100vh; background: var(--surface);
+    border-right: 1px solid var(--border); display: flex; flex-direction: column;
+    position: fixed; top: 0; left: 0; z-index: 100;
+  }
+  .sidebar-logo {
+    padding: 24px 20px 20px;
+    border-bottom: 1px solid var(--border);
+  }
+  .sidebar-logo h1 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 800; color: var(--accent); letter-spacing: -0.5px; }
+  .sidebar-logo p { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  nav { flex: 1; padding: 12px 0; }
+  .nav-section { padding: 8px 16px 4px; font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; }
+  .nav-item {
+    display: flex; align-items: center; gap: 10px;
+    padding: 10px 20px; cursor: pointer; font-size: 13.5px;
+    color: var(--muted); transition: all 0.15s; border-left: 3px solid transparent;
+    font-weight: 400;
+  }
+  .nav-item:hover { color: var(--text); background: var(--surface2); }
+  .nav-item.active { color: var(--accent); border-left-color: var(--accent); background: rgba(245,200,66,0.07); font-weight: 500; }
+  .nav-item .icon { width: 18px; text-align: center; font-size: 15px; }
+
+  /* MAIN */
+  #main { margin-left: 230px; flex: 1; min-height: 100vh; }
+  .page { display: none; padding: 32px 36px; }
+  .page.active { display: block; }
+  .page-header { margin-bottom: 28px; }
+  .page-header h2 { font-family: 'Syne', sans-serif; font-size: 26px; font-weight: 800; color: var(--text); }
+  .page-header p { color: var(--muted); font-size: 13.5px; margin-top: 4px; }
+
+  /* CARDS */
+  .cards-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 16px; margin-bottom: 28px; }
+  .card {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); padding: 20px;
+  }
+  .card-label { font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); font-weight: 600; }
+  .card-value { font-family: 'Syne', sans-serif; font-size: 28px; font-weight: 700; margin-top: 6px; color: var(--text); }
+  .card-value.accent { color: var(--accent); }
+  .card-value.success { color: var(--success); }
+  .card-value.danger { color: var(--danger); }
+  .card-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+  /* TABLES */
+  .table-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; margin-bottom: 24px; }
+  .table-header { display: flex; align-items: center; justify-content: space-between; padding: 16px 20px; border-bottom: 1px solid var(--border); }
+  .table-header h3 { font-family: 'Syne', sans-serif; font-size: 15px; font-weight: 700; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: 11px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); font-weight: 600; border-bottom: 1px solid var(--border); background: rgba(255,255,255,0.02); }
+  td { padding: 12px 16px; font-size: 13.5px; border-bottom: 1px solid rgba(255,255,255,0.04); }
+  tr:last-child td { border-bottom: none; }
+  tr:hover td { background: rgba(255,255,255,0.02); }
+
+  /* BADGES */
+  .badge { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
+  .badge-success { background: rgba(76,175,125,0.15); color: var(--success); }
+  .badge-danger { background: rgba(224,92,92,0.15); color: var(--danger); }
+  .badge-warn { background: rgba(245,200,66,0.15); color: var(--accent); }
+  .badge-info { background: rgba(91,156,246,0.15); color: var(--info); }
+
+  /* BUTTONS */
+  .btn { display: inline-flex; align-items: center; gap: 6px; padding: 9px 18px; border-radius: var(--radius-sm); font-size: 13px; font-weight: 500; cursor: pointer; border: none; transition: all 0.15s; font-family: 'DM Sans', sans-serif; }
+  .btn-primary { background: var(--accent); color: #111; }
+  .btn-primary:hover { background: var(--accent2); }
+  .btn-secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  .btn-secondary:hover { border-color: var(--accent); color: var(--accent); }
+  .btn-danger { background: rgba(224,92,92,0.15); color: var(--danger); border: 1px solid rgba(224,92,92,0.3); }
+  .btn-danger:hover { background: rgba(224,92,92,0.25); }
+  .btn-sm { padding: 5px 12px; font-size: 12px; }
+  .btn-icon { padding: 7px; border-radius: var(--radius-sm); background: var(--surface2); border: 1px solid var(--border); cursor: pointer; color: var(--muted); font-size: 14px; transition: all 0.15s; }
+  .btn-icon:hover { color: var(--text); border-color: var(--accent); }
+
+  /* FORMS */
+  .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 16px; }
+  .form-group { display: flex; flex-direction: column; gap: 6px; }
+  .form-group.full { grid-column: 1 / -1; }
+  label { font-size: 12px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+  input, select, textarea {
+    background: var(--bg); border: 1px solid var(--border); color: var(--text);
+    padding: 10px 14px; border-radius: var(--radius-sm); font-size: 13.5px;
+    font-family: 'DM Sans', sans-serif; outline: none; transition: border 0.15s; width: 100%;
+  }
+  input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+  select option { background: var(--surface2); }
+  .form-actions { margin-top: 20px; display: flex; gap: 10px; }
+
+  /* ACCESOS RAPIDOS */
+  .acceso-btn {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px 18px;
+    cursor: pointer;
+    text-align: center;
+    transition: all 0.15s;
+    font-family: 'DM Sans', sans-serif;
+    color: var(--text);
+    font-size: 14px;
+    line-height: 1.5;
+    min-height: 130px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+  .acceso-btn:hover { border-color: var(--accent); background: rgba(245,200,66,0.09); color: var(--accent); transform: translateY(-2px); box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
+  .acceso-btn:active { transform: translateY(0); }
+  .acceso-btn .acc-nombre { font-weight: 700; font-size: 14.5px; }
+  .acceso-btn .acc-precio { font-size: 20px; font-weight: 800; color: var(--success); }
+  .acceso-btn .acc-badge { font-size: 12px; color: var(--muted); }
+  /* MODAL */
+  .modal-overlay {
+    display: none; position: fixed; inset: 0;
+    background: rgba(0,0,0,0.75); z-index: 999;
+    align-items: center; justify-content: center;
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface); border: 1px solid var(--border);
+    border-radius: var(--radius); width: 90%; max-width: 560px;
+    max-height: 90vh; overflow-y: auto;
+  }
+  .modal-header { padding: 20px 24px 16px; border-bottom: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+  .modal-header h3 { font-family: 'Syne', sans-serif; font-size: 17px; font-weight: 700; }
+  .modal-body { padding: 24px; }
+  .modal-footer { padding: 16px 24px; border-top: 1px solid var(--border); display: flex; justify-content: flex-end; gap: 10px; }
+  .close-btn { background: none; border: none; color: var(--muted); font-size: 20px; cursor: pointer; }
+  .close-btn:hover { color: var(--text); }
+
+  /* ALERTS */
+  .alert { display: flex; gap: 12px; padding: 14px 16px; border-radius: var(--radius-sm); margin-bottom: 12px; font-size: 13px; }
+  .alert-warn { background: rgba(245,200,66,0.1); border: 1px solid rgba(245,200,66,0.25); color: var(--accent); }
+  .alert-danger { background: rgba(224,92,92,0.1); border: 1px solid rgba(224,92,92,0.25); color: var(--danger); }
+  .alert-success { background: rgba(76,175,125,0.1); border: 1px solid rgba(76,175,125,0.25); color: var(--success); }
+
+  /* SEARCH BAR */
+  .search-bar { position: relative; }
+  .search-bar input { padding-left: 36px; }
+  .search-bar::before { content: '🔍'; position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 13px; }
+
+  /* DASHBOARD GRID */
+  .dash-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 900px) { .dash-grid { grid-template-columns: 1fr; } }
+
+  /* FILTER BAR */
+  .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; align-items: center; }
+  .filter-bar input, .filter-bar select { max-width: 200px; }
+
+  /* EMPTY STATE */
+  .empty-state { text-align: center; padding: 48px 24px; color: var(--muted); }
+  .empty-state .icon { font-size: 40px; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* TOAST */
+  #toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--surface2); border: 1px solid var(--border);
+    color: var(--text); padding: 12px 20px; border-radius: var(--radius-sm);
+    font-size: 13.5px; z-index: 9999; opacity: 0; transition: opacity 0.3s;
+    pointer-events: none; max-width: 320px;
+  }
+  #toast.show { opacity: 1; }
+
+  /* SCROLLBAR */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+
+  .two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  @media (max-width: 700px) { .two-col { grid-template-columns: 1fr; } }
+  .text-right { text-align: right; }
+  .text-muted { color: var(--muted); font-size: 12px; }
+  .mt-16 { margin-top: 16px; }
+  .flex-row { display: flex; gap: 10px; align-items: center; }
+  .divider { border: none; border-top: 1px solid var(--border); margin: 20px 0; }
+  .tag { background: var(--surface2); color: var(--muted); padding: 2px 8px; border-radius: 4px; font-size: 11px; }
+  .btn-filter { background: var(--surface); border: 1.5px solid var(--border); color: var(--text); padding: 6px 14px; border-radius: 20px; cursor: pointer; font-size: 0.85rem; transition: all .2s; font-family: inherit; }
+  .btn-filter:hover { border-color: var(--primary); color: var(--primary); }
+  .btn-filter.active { background: var(--primary); color: #fff; border-color: var(--primary); font-weight: 600; }
+</style>
+</head>
+<body>
+
+<!-- SIDEBAR -->
+<aside id="sidebar">
+  <div class="sidebar-logo">
+    <h1>📋 PapeléríaPro</h1>
+    <p>Sistema de administración</p>
+  </div>
+  <nav>
+    <div class="nav-section">Principal</div>
+    <div class="nav-item active" onclick="navigate('dashboard')"><span class="icon">🏠</span> Panel principal</div>
+
+    <div class="nav-section">Operaciones</div>
+    <div class="nav-item" onclick="navigate('inventario')"><span class="icon">📦</span> Inventario</div>
+    <div class="nav-item" onclick="navigate('ventas')"><span class="icon">🛒</span> Registrar venta o servicio</div>
+
+    <div class="nav-section">Historial</div>
+    <div class="nav-item" onclick="navigate('hist-ventas')"><span class="icon">📄</span> Historial ventas y servicios</div>
+
+    <div class="nav-section">Análisis</div>
+    <div class="nav-item" onclick="navigate('reportes')"><span class="icon">📊</span> Reportes</div>
+    <div class="nav-item" onclick="navigate('comprar')"><span class="icon">🛒</span> Surtido por comprar</div>
+    <div style="padding:12px 16px;border-top:1px solid var(--border);margin-top:auto;">
+    <div class="nav-section" style="margin-bottom:8px;">Datos</div>
+    <button class="btn btn-secondary" style="width:100%;margin-bottom:8px;font-size:12px;" onclick="guardarCopia()">💾 Guardar copia</button>
+    <label class="btn btn-secondary" style="width:100%;font-size:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;">
+      📂 Restaurar copia
+      <input type="file" accept=".json" onchange="restaurarCopia(event)" style="display:none;">
+
+    </label>
+  </div>
+</nav>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main id="main">
+
+  <!-- ===== DASHBOARD ===== -->
+  <section class="page active" id="page-dashboard">
+    <div class="page-header">
+      <h2>Panel Principal</h2>
+      <p id="fecha-hoy"></p>
+    </div>
+    <div id="alertas-container"></div>
+    <div class="cards-grid" id="dash-cards"></div>
+    <div class="dash-grid">
+      <div class="table-wrap">
+        <div class="table-header"><h3>Últimas ventas</h3></div>
+        <table><thead><tr><th>Producto</th><th>Cant.</th><th>Valor</th><th>Hora</th></tr></thead>
+        <tbody id="dash-ventas"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header"><h3>Últimos servicios</h3></div>
+        <table><thead><tr><th>Servicio</th><th>Valor</th><th>Hora</th></tr></thead>
+        <tbody id="dash-servicios"></tbody></table>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-header"><h3>⚠️ Alertas de inventario</h3></div>
+      <table><thead><tr><th>Producto</th><th>Disponible</th><th>Stock mínimo</th><th>Estado</th></tr></thead>
+      <tbody id="dash-alertas-inv"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ===== INVENTARIO ===== -->
+  <section class="page" id="page-inventario">
+    <div class="page-header">
+      <h2>Inventario</h2>
+      <p>Gestiona todos los productos de la papelería</p>
+    </div>
+    <div class="filter-bar">
+      <div class="search-bar"><input type="text" id="inv-buscar" placeholder="Buscar por nombre..." oninput="renderInventario()"></div>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <button class="btn btn-filter" id="filtro-todos" onclick="setFiltroInv('')" title="Mostrar todo">📦 Todo</button>
+        <button class="btn btn-filter" id="filtro-papeleria" onclick="setFiltroInv('papeleria')" title="Solo productos de papelería">🗒️ Papelería</button>
+        <button class="btn btn-filter" id="filtro-servicios" onclick="setFiltroInv('servicios')" title="Solo servicios">⚡ Servicios</button>
+      </div>
+      <input type="hidden" id="inv-cat-filter" value="">
+      <button class="btn btn-primary" onclick="abrirModalProducto()">+ Nuevo producto</button>
+
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead><tr>
+          <th onclick="sortInventario('nombre')" style="cursor:pointer;user-select:none" id="th-nombre">Nombre <span id="sort-icon-nombre"></span></th>
+          <th onclick="sortInventario('precioCompra')" style="cursor:pointer;user-select:none" id="th-precioCompra">P. Compra <span id="sort-icon-precioCompra"></span></th>
+          <th onclick="sortInventario('precioVenta')" style="cursor:pointer;user-select:none" id="th-precioVenta">P. Venta <span id="sort-icon-precioVenta"></span></th>
+          <th onclick="sortInventario('cantidad')" style="cursor:pointer;user-select:none" id="th-cantidad">Stock <span id="sort-icon-cantidad"></span></th>
+          <th onclick="sortInventario('utilidad')" style="cursor:pointer;user-select:none" id="th-utilidad">Utilidad <span id="sort-icon-utilidad"></span></th>
+          <th>Estado</th><th>Acciones</th>
+        </tr></thead>
+        <tbody id="tabla-inventario"></tbody>
+      </table>
+    </div>
+    <div class="cards-grid" id="inv-resumen"></div>
+  </section>
+
+  <!-- ===== VENTAS ===== -->
+  <section class="page" id="page-ventas">
+    <div class="page-header"><h2>Registrar Venta o Servicio</h2><p>Toca un acceso rapido o busca el producto</p></div>
+
+    <!-- Buscador compacto + form resultado -->
+    <div style="display:flex;gap:16px;align-items:flex-start;flex-wrap:wrap;margin-bottom:24px;">
+      <div class="table-wrap" style="min-width:280px;max-width:460px;flex:1;">
+        <div class="modal-body" style="padding:16px;">
+          <div class="form-group" style="margin-bottom:8px;">
+            <div class="search-bar"><input type="text" id="venta-buscar" placeholder="Buscar producto o servicio..." oninput="buscarProductoVenta()" style="font-size:14px;"></div>
+          </div>
+          <div id="venta-resultados" style="margin-top:8px;"></div>
+          <div id="venta-form" style="display:none; margin-top:16px;">
+            <div id="venta-producto-info" style="margin-bottom:12px;"></div>
+            <div class="form-group">
+              <label>Cantidad</label>
+              <input type="number" id="venta-cantidad" min="1" value="1" oninput="calcularVenta()" style="max-width:120px;">
+            </div>
+            <div id="venta-calculo" style="margin-top:10px;"></div>
+            <div class="form-actions" style="margin-top:12px;">
+              <button class="btn btn-primary" onclick="registrarVenta()">✅ Registrar</button>
+              <button class="btn btn-secondary" onclick="limpiarVenta()">Cancelar</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Accesos rapidos: cuadros grandes full width -->
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
+      <span style="font-size:12px;text-transform:uppercase;letter-spacing:1px;color:var(--muted);font-weight:600">⚡ Accesos rapidos — Lo mas vendido</span>
+      <button class="btn btn-sm btn-secondary" onclick="renderAccesosRapidos()" title="Actualizar ranking">↻ Actualizar</button>
+    </div>
+    <div id="accesos-rapidos" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px;"></div>
+  </section>
+
+  <!-- ===== SERVICIOS REGISTRO ===== -->
+  <section class="page" id="page-servicios-reg">
+    <div class="page-header"><h2>Registrar Servicio</h2><p>Selecciona el servicio prestado</p></div>
+    <div class="filter-bar">
+      <div class="search-bar"><input type="text" id="srv-buscar" placeholder="Buscar servicio..." oninput="renderServiciosReg()"></div>
+      <select id="srv-cat-reg" onchange="renderServiciosReg()">
+        <option value="">Todas las categorias</option>
+      </select>
+    </div>
+    <div id="servicios-reg-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px;"></div>
+  </section>
+
+  <!-- ===== COMPRAS ===== -->
+  <section class="page" id="page-compras">
+    <div class="page-header"><h2>Registrar Compra</h2><p>Registra nueva mercancía recibida</p></div>
+    <div class="table-wrap" style="max-width:560px;">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="compra-fecha">
+          </div>
+          <div class="form-group">
+            <label>Buscar producto</label>
+            <div class="search-bar"><input type="text" id="compra-prod-buscar" placeholder="Nombre del producto..." oninput="buscarProductoCompra()"></div>
+          </div>
+          <div id="compra-resultados" class="form-group full"></div>
+          <div class="form-group" id="compra-cantidad-group" style="display:none;">
+            <label>Cantidad</label>
+            <input type="number" id="compra-cantidad" min="1" value="1">
+          </div>
+          <div class="form-group" id="compra-precio-group" style="display:none;">
+            <label>Precio de compra unitario ($)</label>
+            <input type="number" id="compra-precio" min="0" step="50">
+          </div>
+        </div>
+        <div id="compra-selected-info" style="margin-top:12px;"></div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="registrarCompra()">📥 Registrar compra</button>
+          <button class="btn btn-secondary" onclick="limpiarCompra()">Limpiar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== GASTOS ===== -->
+  <section class="page" id="page-gastos">
+    <div class="page-header"><h2>Registrar Gasto</h2><p>Registra los gastos del negocio</p></div>
+    <div class="table-wrap" style="max-width:480px;">
+      <div class="modal-body">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Fecha</label>
+            <input type="date" id="gasto-fecha">
+          </div>
+          <div class="form-group">
+            <label>Categoría</label>
+            <select id="gasto-cat">
+              <option value="Arriendo">Arriendo</option>
+              <option value="Internet">Internet del negocio</option>
+              <option value="Energia">Energia</option>
+              <option value="Agua">Agua</option>
+              <option value="Transporte">Transporte</option>
+              <option value="Insumos">Insumos / materiales</option>
+              <option value="Mantenimiento">Mantenimiento equipos</option>
+              <option value="Publicidad">Publicidad</option>
+              <option value="Otro">Otro</option>
+            </select>
+          </div>
+          <div class="form-group full">
+            <label>Concepto (descripción)</label>
+            <input type="text" id="gasto-concepto" placeholder="Ej: Pago arriendo mes de junio">
+          </div>
+          <div class="form-group">
+            <label>Valor ($)</label>
+            <input type="number" id="gasto-valor" min="0" step="100" placeholder="0">
+          </div>
+        </div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="registrarGasto()">💸 Registrar gasto</button>
+          <button class="btn btn-secondary" onclick="limpiarGasto()">Limpiar</button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===== HISTORIAL VENTAS ===== -->
+  <section class="page" id="page-hist-ventas">
+    <div class="page-header"><h2>Historial de Ventas y Servicios</h2></div>
+    <div class="filter-bar">
+      <input type="date" id="hv-desde">
+      <input type="date" id="hv-hasta">
+      <button class="btn btn-secondary" onclick="renderHistVentas()">Filtrar</button>
+      <button class="btn btn-secondary" onclick="exportarCSV('ventas')">⬇ Exportar CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Fecha</th><th>Hora</th><th>Tipo</th><th>Descripción</th><th>Cant.</th><th>P. Venta</th><th>Total</th><th>Ganancia</th></tr></thead>
+      <tbody id="tabla-hist-ventas"></tbody></table>
+    </div>
+    <div id="hv-totales"></div>
+  </section>
+
+  <!-- ===== HISTORIAL SERVICIOS ===== -->
+  <section class="page" id="page-hist-servicios">
+    <div class="page-header"><h2>Historial de Servicios</h2></div>
+    <div class="filter-bar">
+      <input type="date" id="hs-desde">
+      <input type="date" id="hs-hasta">
+      <button class="btn btn-secondary" onclick="renderHistServicios()">Filtrar</button>
+      <button class="btn btn-secondary" onclick="exportarCSV('servicios')">⬇ Exportar CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Fecha</th><th>Hora</th><th>Servicio</th><th>Categoría</th><th>Valor</th><th>Ganancia</th></tr></thead>
+      <tbody id="tabla-hist-servicios"></tbody></table>
+    </div>
+    <div id="hs-totales"></div>
+  </section>
+
+  <!-- ===== HISTORIAL COMPRAS ===== -->
+  <section class="page" id="page-hist-compras">
+    <div class="page-header"><h2>Historial de Compras</h2></div>
+    <div class="filter-bar">
+      <input type="date" id="hc-desde">
+      <input type="date" id="hc-hasta">
+      <button class="btn btn-secondary" onclick="renderHistCompras()">Filtrar</button>
+      <button class="btn btn-secondary" onclick="exportarCSV('compras')">⬇ Exportar CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Fecha</th><th>Producto</th><th>Cantidad</th><th>P. Compra</th><th>Total invertido</th></tr></thead>
+      <tbody id="tabla-hist-compras"></tbody></table>
+    </div>
+  </section>
+
+  <!-- ===== HISTORIAL GASTOS ===== -->
+  <section class="page" id="page-hist-gastos">
+    <div class="page-header"><h2>Historial de Gastos</h2></div>
+    <div class="filter-bar">
+      <input type="date" id="hg-desde">
+      <input type="date" id="hg-hasta">
+      <button class="btn btn-secondary" onclick="renderHistGastos()">Filtrar</button>
+      <button class="btn btn-secondary" onclick="exportarCSV('gastos')">⬇ Exportar CSV</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Fecha</th><th>Categoría</th><th>Concepto</th><th>Valor</th></tr></thead>
+      <tbody id="tabla-hist-gastos"></tbody></table>
+    </div>
+    <div id="hg-totales"></div>
+  </section>
+
+  <!-- ===== REPORTES ===== -->
+  <section class="page" id="page-reportes">
+    <div class="page-header"><h2>Reportes</h2><p>Resumen financiero del negocio</p></div>
+    <div class="filter-bar">
+      <select id="rep-periodo" onchange="renderReportes()">
+        <option value="hoy">Hoy</option>
+        <option value="semana">Esta semana</option>
+        <option value="mes" selected>Este mes</option>
+        <option value="custom">Personalizado</option>
+      </select>
+      <input type="date" id="rep-desde" style="display:none;">
+      <input type="date" id="rep-hasta" style="display:none;">
+      <button class="btn btn-secondary" id="rep-aplicar" style="display:none;" onclick="renderReportes()">Aplicar</button>
+      <button class="btn btn-secondary" onclick="imprimirReporte()">🖨 Imprimir reporte</button>
+    </div>
+    <div class="cards-grid" id="rep-cards"></div>
+    <div class="two-col">
+      <div class="table-wrap">
+        <div class="table-header"><h3>Productos más vendidos</h3></div>
+        <table><thead><tr><th>Producto</th><th>Unidades</th><th>Ingresos</th></tr></thead>
+        <tbody id="rep-top-productos"></tbody></table>
+      </div>
+      <div class="table-wrap">
+        <div class="table-header"><h3>Servicios más prestados</h3></div>
+        <table><thead><tr><th>Servicio</th><th>Veces</th><th>Ingresos</th></tr></thead>
+        <tbody id="rep-top-servicios"></tbody></table>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <div class="table-header"><h3>Gastos por categoría</h3></div>
+      <table><thead><tr><th>Categoría</th><th>Total gastado</th></tr></thead>
+      <tbody id="rep-gastos-cat"></tbody></table>
+    </div>
+  </section>
+
+
+  <!-- ===== QUE COMPRAR ===== -->
+  <section class="page" id="page-comprar">
+    <div class="page-header">
+      <h2>Surtido por comprar</h2>
+      <p>Ranking de ventas y lista de recompra segun lo que mas se ha vendido</p>
+    </div>
+
+    <div class="filter-bar" style="margin-bottom:20px">
+      <label style="color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:1px">Periodo de analisis</label>
+      <select id="cp-periodo" onchange="renderQueComprar()">
+        <option value="todo">Todo el tiempo</option>
+        <option value="mes" selected>Ultimo mes</option>
+        <option value="semana">Ultima semana</option>
+      </select>
+      <button class="btn btn-primary" onclick="exportarListaCompra()">⬇ Exportar lista de compra</button>
+    </div>
+
+    <!-- Resumen rapido -->
+    <div class="cards-grid" id="cp-cards" style="margin-bottom:24px"></div>
+
+    <div class="two-col">
+      <!-- Ranking: lo mas vendido -->
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>🏆 Lo mas vendido</h3>
+          <span style="font-size:12px;color:var(--muted)">Prioridad de recompra</span>
+        </div>
+        <table>
+          <thead><tr><th>#</th><th>Producto / Servicio</th><th>Vendido</th><th>Stock actual</th><th>Prioridad</th></tr></thead>
+          <tbody id="cp-ranking"></tbody>
+        </table>
+      </div>
+
+      <!-- Lista de recompra urgente -->
+      <div class="table-wrap">
+        <div class="table-header">
+          <h3>⚠️ Recomprar urgente</h3>
+          <span style="font-size:12px;color:var(--muted)">Agotados o stock bajo</span>
+        </div>
+        <table>
+          <thead><tr><th>Producto</th><th>Stock</th><th>Veces vendido</th><th>Accion</th></tr></thead>
+          <tbody id="cp-urgente"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Lista completa de recompra sugerida -->
+    <div class="table-wrap" style="margin-top:24px">
+      <div class="table-header">
+        <h3>📋 Lista de compra sugerida</h3>
+        <span style="font-size:12px;color:var(--muted)">Ordenada por urgencia y ventas</span>
+      </div>
+      <table>
+        <thead><tr><th>Producto</th><th>Stock actual</th><th>Stock mínimo</th><th>Veces vendido</th><th>P. Compra</th><th>Sugerido comprar</th></tr></thead>
+        <tbody id="cp-lista-completa"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===== CATÁLOGO SERVICIOS ===== -->
+  <section class="page" id="page-servicios-cat">
+    <div class="page-header"><h2>Catálogo de Servicios</h2><p>Configura los servicios que ofrece la papelería</p></div>
+    <div class="filter-bar">
+      <div class="search-bar"><input type="text" id="cat-buscar" placeholder="Buscar servicio..." oninput="renderCatalogoServicios()"></div>
+      <select id="cat-filtro-cat" onchange="renderCatalogoServicios()">
+        <option value="">Todas las categorias</option>
+      </select>
+      <button class="btn btn-primary" onclick="abrirModalServicio()">+ Nuevo servicio</button>
+    </div>
+    <div class="table-wrap">
+      <table><thead><tr><th>Servicio</th><th>Categoría</th><th>Precio venta</th><th>Costo</th><th>Utilidad</th><th>Estado</th><th>Acciones</th></tr></thead>
+      <tbody id="tabla-cat-servicios"></tbody></table>
+    </div>
+  </section>
+
+</main>
+
+<!-- MODAL PRODUCTO -->
+<div class="modal-overlay" id="modal-producto">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-prod-titulo">Nuevo producto</h3>
+      <button class="close-btn" onclick="cerrarModal('modal-producto')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="prod-id">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Nombre del producto</label>
+          <input type="text" id="prod-nombre" placeholder="Ej: Cuaderno cuadriculado 100 hojas">
+        </div>
+        <div class="form-group">
+          <label>Precio de compra ($)</label>
+          <input type="number" id="prod-precio-compra" min="0" step="50" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Precio de venta ($)</label>
+          <input type="number" id="prod-precio-venta" min="0" step="50" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Cantidad disponible</label>
+          <input type="number" id="prod-cantidad" min="0" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Stock mínimo (alerta)</label>
+          <input type="number" id="prod-stock-min" min="0" placeholder="5">
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="prod-estado">
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modal-producto')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarProducto()">Guardar producto</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL SERVICIO -->
+<div class="modal-overlay" id="modal-servicio">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="modal-srv-titulo">Nuevo servicio</h3>
+      <button class="close-btn" onclick="cerrarModal('modal-servicio')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="srv-id">
+      <div class="form-grid">
+        <div class="form-group full">
+          <label>Nombre del servicio</label>
+          <input type="text" id="srv-nombre" placeholder="Ej: Fotocopia blanco y negro">
+        </div>
+        <div class="form-group">
+          <label>Categoría</label>
+          <input type="text" id="srv-categoria" placeholder="Ej: Impresiones y copias" list="srv-cat-list">
+          <datalist id="srv-cat-list"></datalist>
+        </div>
+        <div class="form-group">
+          <label>Precio de venta ($)</label>
+          <input type="number" id="srv-precio" min="0" step="50" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Costo (opcional, $)</label>
+          <input type="number" id="srv-costo" min="0" step="50" placeholder="0">
+        </div>
+        <div class="form-group">
+          <label>Estado</label>
+          <select id="srv-estado">
+            <option value="activo">Activo</option>
+            <option value="inactivo">Inactivo</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modal-servicio')">Cancelar</button>
+      <button class="btn btn-primary" onclick="guardarServicio()">Guardar servicio</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL REGISTRAR SERVICIO RÁPIDO -->
+<div class="modal-overlay" id="modal-srv-rapido">
+  <div class="modal">
+    <div class="modal-header">
+      <h3 id="srv-rapido-titulo">Registrar servicio</h3>
+      <button class="close-btn" onclick="cerrarModal('modal-srv-rapido')">✕</button>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="srv-rapido-id">
+      <div id="srv-rapido-info" style="margin-bottom:16px;"></div>
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Valor cobrado ($)</label>
+          <input type="number" id="srv-rapido-valor" min="0" step="50">
+        </div>
+        <div class="form-group">
+          <label>Cantidad / unidades</label>
+          <input type="number" id="srv-rapido-cant" min="1" value="1" oninput="calcularSrvRapido()">
+        </div>
+        <div class="form-group">
+          <label>Observación (opcional)</label>
+          <input type="text" id="srv-rapido-obs" placeholder="Ej: 5 hojas, trabajo universitario...">
+        </div>
+      </div>
+      <div id="srv-rapido-calculo" style="margin-top:12px;"></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-secondary" onclick="cerrarModal('modal-srv-rapido')">Cancelar</button>
+      <button class="btn btn-primary" onclick="registrarServicioRapido()">✅ Registrar</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ===== BASE DE DATOS LOCAL =====
+const DB = {
+  get: (key) => { try { return JSON.parse(localStorage.getItem(key)) || []; } catch { return []; } },
+  set: (key, data) => localStorage.setItem(key, JSON.stringify(data)),
+  getObj: (key, def) => { try { return JSON.parse(localStorage.getItem(key)) || def; } catch { return def; } },
+};
+
+// ===== SERVICIOS PREDETERMINADOS =====
+const SERVICIOS_DEFAULT = [
+  // ── IMPRESIONES Y COPIAS ──
+  {nombre:'Fotocopia blanco y negro carta',categoria:'Impresiones y copias',precio:200,costo:50,estado:'activo'},
+  {nombre:'Fotocopia blanco y negro oficio',categoria:'Impresiones y copias',precio:250,costo:60,estado:'activo'},
+  {nombre:'Fotocopia a color carta',categoria:'Impresiones y copias',precio:500,costo:150,estado:'activo'},
+  {nombre:'Fotocopia a color oficio',categoria:'Impresiones y copias',precio:600,costo:180,estado:'activo'},
+  {nombre:'Impresion blanco y negro carta',categoria:'Impresiones y copias',precio:300,costo:80,estado:'activo'},
+  {nombre:'Impresion blanco y negro oficio',categoria:'Impresiones y copias',precio:400,costo:100,estado:'activo'},
+  {nombre:'Impresion a color carta',categoria:'Impresiones y copias',precio:700,costo:200,estado:'activo'},
+  {nombre:'Impresion a color oficio',categoria:'Impresiones y copias',precio:900,costo:250,estado:'activo'},
+  {nombre:'Impresion doble cara blanco y negro',categoria:'Impresiones y copias',precio:500,costo:150,estado:'activo'},
+  {nombre:'Impresion doble cara a color',categoria:'Impresiones y copias',precio:1200,costo:380,estado:'activo'},
+  {nombre:'Impresion fotografica 10x15 cm',categoria:'Impresiones y copias',precio:1500,costo:500,estado:'activo'},
+  {nombre:'Impresion fotografica 13x18 cm',categoria:'Impresiones y copias',precio:2000,costo:700,estado:'activo'},
+  {nombre:'Impresion fotografica 20x25 cm',categoria:'Impresiones y copias',precio:4000,costo:1500,estado:'activo'},
+  {nombre:'Impresion en opalina carta',categoria:'Impresiones y copias',precio:1200,costo:400,estado:'activo'},
+  {nombre:'Impresion en opalina oficio',categoria:'Impresiones y copias',precio:1500,costo:500,estado:'activo'},
+  {nombre:'Impresion en cartulina carta',categoria:'Impresiones y copias',precio:1000,costo:350,estado:'activo'},
+  {nombre:'Impresion en propalcote 150gr carta',categoria:'Impresiones y copias',precio:1500,costo:500,estado:'activo'},
+  {nombre:'Impresion en propalcote 200gr carta',categoria:'Impresiones y copias',precio:1800,costo:600,estado:'activo'},
+  {nombre:'Impresion tamano A3',categoria:'Impresiones y copias',precio:2500,costo:800,estado:'activo'},
+  {nombre:'Impresion plano / plotter',categoria:'Impresiones y copias',precio:8000,costo:2500,estado:'activo'},
+  {nombre:'Impresion de carnet / credencial color',categoria:'Impresiones y copias',precio:2000,costo:600,estado:'activo'},
+  {nombre:'Impresion etiquetas adhesivas carta',categoria:'Impresiones y copias',precio:3000,costo:800,estado:'activo'},
+  {nombre:'Impresion desde USB / celular',categoria:'Impresiones y copias',precio:500,costo:0,estado:'activo'},
+  {nombre:'Impresion desde correo electronico',categoria:'Impresiones y copias',precio:500,costo:0,estado:'activo'},
+  // ── DIGITALIZACIÓN Y EDICIÓN ──
+  {nombre:'Escaneo simple (1 a 5 hojas)',categoria:'Digitalizacion y edicion',precio:500,costo:0,estado:'activo'},
+  {nombre:'Escaneo por hoja adicional',categoria:'Digitalizacion y edicion',precio:200,costo:0,estado:'activo'},
+  {nombre:'Escaneo a PDF y envio por WhatsApp/correo',categoria:'Digitalizacion y edicion',precio:1000,costo:0,estado:'activo'},
+  {nombre:'Edicion basica de documento Word',categoria:'Digitalizacion y edicion',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Edicion avanzada de documento Word',categoria:'Digitalizacion y edicion',precio:6000,costo:0,estado:'activo'},
+  {nombre:'Edicion y formato PDF',categoria:'Digitalizacion y edicion',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Edicion de presentacion PowerPoint',categoria:'Digitalizacion y edicion',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Creacion presentacion PowerPoint desde cero',categoria:'Digitalizacion y edicion',precio:12000,costo:0,estado:'activo'},
+  {nombre:'Transcripcion de documento manuscrito',categoria:'Digitalizacion y edicion',precio:4000,costo:0,estado:'activo'},
+  {nombre:'Transcripcion de audio a texto',categoria:'Digitalizacion y edicion',precio:6000,costo:0,estado:'activo'},
+  {nombre:'Diseno de volante publicitario',categoria:'Digitalizacion y edicion',precio:8000,costo:0,estado:'activo'},
+  {nombre:'Diseno de tarjeta de presentacion',categoria:'Digitalizacion y edicion',precio:10000,costo:0,estado:'activo'},
+  {nombre:'Diseno de afiche o poster',categoria:'Digitalizacion y edicion',precio:12000,costo:0,estado:'activo'},
+  {nombre:'Diseno de diploma o reconocimiento',categoria:'Digitalizacion y edicion',precio:8000,costo:0,estado:'activo'},
+  {nombre:'Diseno de banner publicitario',categoria:'Digitalizacion y edicion',precio:15000,costo:0,estado:'activo'},
+  {nombre:'Retoque fotografico basico',categoria:'Digitalizacion y edicion',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Conversion PDF a Word',categoria:'Digitalizacion y edicion',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Conversion Word a PDF',categoria:'Digitalizacion y edicion',precio:1000,costo:0,estado:'activo'},
+  {nombre:'Quemado de CD',categoria:'Digitalizacion y edicion',precio:3000,costo:1000,estado:'activo'},
+  {nombre:'Quemado de DVD',categoria:'Digitalizacion y edicion',precio:4000,costo:1500,estado:'activo'},
+  {nombre:'Carga de archivos a USB del cliente',categoria:'Digitalizacion y edicion',precio:500,costo:0,estado:'activo'},
+  {nombre:'Compresion de archivos ZIP/RAR',categoria:'Digitalizacion y edicion',precio:1000,costo:0,estado:'activo'},
+  // ── ACABADOS ──
+  {nombre:'Laminado carta sencillo',categoria:'Acabados',precio:2000,costo:600,estado:'activo'},
+  {nombre:'Laminado oficio sencillo',categoria:'Acabados',precio:2500,costo:800,estado:'activo'},
+  {nombre:'Laminado carta doble (dos lados)',categoria:'Acabados',precio:3500,costo:1100,estado:'activo'},
+  {nombre:'Laminado carne / foto pequena',categoria:'Acabados',precio:1500,costo:400,estado:'activo'},
+  {nombre:'Laminado A3 grande',categoria:'Acabados',precio:5000,costo:1800,estado:'activo'},
+  {nombre:'Anillado tamano carta',categoria:'Acabados',precio:3000,costo:1000,estado:'activo'},
+  {nombre:'Anillado tamano oficio',categoria:'Acabados',precio:3500,costo:1200,estado:'activo'},
+  {nombre:'Argollado metalico carta',categoria:'Acabados',precio:4500,costo:1500,estado:'activo'},
+  {nombre:'Argollado metalico oficio',categoria:'Acabados',precio:5000,costo:1800,estado:'activo'},
+  {nombre:'Empastado pasta dura carta',categoria:'Acabados',precio:8000,costo:2500,estado:'activo'},
+  {nombre:'Empastado pasta dura oficio',categoria:'Acabados',precio:10000,costo:3000,estado:'activo'},
+  {nombre:'Encuadernacion termica carta',categoria:'Acabados',precio:5000,costo:1500,estado:'activo'},
+  {nombre:'Encuadernacion termica oficio',categoria:'Acabados',precio:6000,costo:2000,estado:'activo'},
+  {nombre:'Plastificado de carne doble cara',categoria:'Acabados',precio:2000,costo:600,estado:'activo'},
+  {nombre:'Plastificado de diploma / certificado',categoria:'Acabados',precio:3000,costo:1000,estado:'activo'},
+  {nombre:'Corte de papel (por pliego)',categoria:'Acabados',precio:1000,costo:0,estado:'activo'},
+  {nombre:'Perforado de documentos',categoria:'Acabados',precio:500,costo:0,estado:'activo'},
+  {nombre:'Engrapado de documentos',categoria:'Acabados',precio:500,costo:0,estado:'activo'},
+  {nombre:'Foliado de documentos (por hoja)',categoria:'Acabados',precio:200,costo:0,estado:'activo'},
+  // ── TRABAJOS ESCOLARES ──
+  {nombre:'Trabajo escolar basico (impresion + argollado)',categoria:'Trabajos escolares',precio:12000,costo:3500,estado:'activo'},
+  {nombre:'Trabajo universitario completo (empastado)',categoria:'Trabajos escolares',precio:20000,costo:6000,estado:'activo'},
+  {nombre:'Trabajo con caratula a color + argollado',categoria:'Trabajos escolares',precio:15000,costo:4500,estado:'activo'},
+  {nombre:'Monografia o tesis (impresion + empastado)',categoria:'Trabajos escolares',precio:35000,costo:10000,estado:'activo'},
+  {nombre:'Caratula personalizada a color',categoria:'Trabajos escolares',precio:2000,costo:500,estado:'activo'},
+  {nombre:'Caratula a blanco y negro',categoria:'Trabajos escolares',precio:800,costo:200,estado:'activo'},
+  {nombre:'Separadores de trabajo en cartulina',categoria:'Trabajos escolares',precio:500,costo:100,estado:'activo'},
+  {nombre:'Diapositivas impresas 6 por hoja BN',categoria:'Trabajos escolares',precio:500,costo:150,estado:'activo'},
+  {nombre:'Diapositivas impresas 6 por hoja color',categoria:'Trabajos escolares',precio:1000,costo:300,estado:'activo'},
+  {nombre:'Informe tecnico completo',categoria:'Trabajos escolares',precio:25000,costo:7000,estado:'activo'},
+  {nombre:'Mapa conceptual (diseno e impresion)',categoria:'Trabajos escolares',precio:5000,costo:1000,estado:'activo'},
+  {nombre:'Linea del tiempo (diseno e impresion)',categoria:'Trabajos escolares',precio:5000,costo:1000,estado:'activo'},
+  // ── RECARGAS ──
+  {nombre:'Recarga Claro $1.000',categoria:'Recargas de celular',precio:1000,costo:920,estado:'activo'},
+  {nombre:'Recarga Claro $2.000',categoria:'Recargas de celular',precio:2000,costo:1840,estado:'activo'},
+  {nombre:'Recarga Claro $3.000',categoria:'Recargas de celular',precio:3000,costo:2760,estado:'activo'},
+  {nombre:'Recarga Claro $5.000',categoria:'Recargas de celular',precio:5000,costo:4600,estado:'activo'},
+  {nombre:'Recarga Claro $10.000',categoria:'Recargas de celular',precio:10000,costo:9200,estado:'activo'},
+  {nombre:'Recarga Claro $20.000',categoria:'Recargas de celular',precio:20000,costo:18400,estado:'activo'},
+  {nombre:'Recarga Movistar $1.000',categoria:'Recargas de celular',precio:1000,costo:920,estado:'activo'},
+  {nombre:'Recarga Movistar $2.000',categoria:'Recargas de celular',precio:2000,costo:1840,estado:'activo'},
+  {nombre:'Recarga Movistar $5.000',categoria:'Recargas de celular',precio:5000,costo:4600,estado:'activo'},
+  {nombre:'Recarga Movistar $10.000',categoria:'Recargas de celular',precio:10000,costo:9200,estado:'activo'},
+  {nombre:'Recarga Movistar $20.000',categoria:'Recargas de celular',precio:20000,costo:18400,estado:'activo'},
+  {nombre:'Recarga Tigo $1.000',categoria:'Recargas de celular',precio:1000,costo:920,estado:'activo'},
+  {nombre:'Recarga Tigo $2.000',categoria:'Recargas de celular',precio:2000,costo:1840,estado:'activo'},
+  {nombre:'Recarga Tigo $5.000',categoria:'Recargas de celular',precio:5000,costo:4600,estado:'activo'},
+  {nombre:'Recarga Tigo $10.000',categoria:'Recargas de celular',precio:10000,costo:9200,estado:'activo'},
+  {nombre:'Recarga Tigo $20.000',categoria:'Recargas de celular',precio:20000,costo:18400,estado:'activo'},
+  {nombre:'Recarga Virgin Mobile $1.000',categoria:'Recargas de celular',precio:1000,costo:920,estado:'activo'},
+  {nombre:'Recarga Virgin Mobile $5.000',categoria:'Recargas de celular',precio:5000,costo:4600,estado:'activo'},
+  {nombre:'Recarga Virgin Mobile $10.000',categoria:'Recargas de celular',precio:10000,costo:9200,estado:'activo'},
+  {nombre:'Paquete datos Claro 1GB',categoria:'Recargas de celular',precio:5000,costo:4600,estado:'activo'},
+  {nombre:'Paquete datos Claro 3GB',categoria:'Recargas de celular',precio:10000,costo:9200,estado:'activo'},
+  {nombre:'Paquete datos Movistar 1GB',categoria:'Recargas de celular',precio:5000,costo:4600,estado:'activo'},
+  {nombre:'Paquete datos Movistar 3GB',categoria:'Recargas de celular',precio:10000,costo:9200,estado:'activo'},
+  {nombre:'Paquete datos Tigo 1GB',categoria:'Recargas de celular',precio:5000,costo:4600,estado:'activo'},
+  {nombre:'Paquete datos Tigo 3GB',categoria:'Recargas de celular',precio:10000,costo:9200,estado:'activo'},
+  {nombre:'Paquete redes sociales Claro',categoria:'Recargas de celular',precio:3000,costo:2700,estado:'activo'},
+  {nombre:'Paquete redes sociales Movistar',categoria:'Recargas de celular',precio:3000,costo:2700,estado:'activo'},
+  {nombre:'Paquete redes sociales Tigo',categoria:'Recargas de celular',precio:3000,costo:2700,estado:'activo'},
+  // ── CERTIFICADOS ──
+  {nombre:'Certificado de tradicion y libertad',categoria:'Certificados y documentos',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Certificado antecedentes judiciales (Policia)',categoria:'Certificados y documentos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Certificado antecedentes disciplinarios (PGN)',categoria:'Certificados y documentos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Certificado antecedentes fiscales (Contraloria)',categoria:'Certificados y documentos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Certificado de EPS (afiliacion o vigencia)',categoria:'Certificados y documentos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Certificado historia laboral Colpensiones',categoria:'Certificados y documentos',precio:4000,costo:0,estado:'activo'},
+  {nombre:'Certificado de semanas cotizadas Colpensiones',categoria:'Certificados y documentos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Certificado de Camara de Comercio (existencia)',categoria:'Certificados y documentos',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Certificado de estratificacion',categoria:'Certificados y documentos',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Certificado de residencia',categoria:'Certificados y documentos',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Certificado SISBEN',categoria:'Certificados y documentos',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Certificado de registro civil de nacimiento',categoria:'Certificados y documentos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Certificado de registro civil de matrimonio',categoria:'Certificados y documentos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Certificado de defuncion',categoria:'Certificados y documentos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Diploma o acta de grado (descarga ICFES/universidad)',categoria:'Certificados y documentos',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Certificado de notas escolares (descarga)',categoria:'Certificados y documentos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Certificado Colombia Mayor (beneficiario)',categoria:'Certificados y documentos',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Certificado de afiliacion ADRES / Fosyga',categoria:'Certificados y documentos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Certificado de no deudor DIAN',categoria:'Certificados y documentos',precio:3000,costo:0,estado:'activo'},
+  // ── TRÁMITES ──
+  {nombre:'SOAT (consulta y orientacion)',categoria:'Tramites y gestiones',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Consulta de multas y comparendos',categoria:'Tramites y gestiones',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Agendamiento cita Registraduria',categoria:'Tramites y gestiones',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Agendamiento cita Secretaria de Transito',categoria:'Tramites y gestiones',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Agendamiento cita Gobernacion / Alcaldia',categoria:'Tramites y gestiones',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Apostilla de documentos',categoria:'Tramites y gestiones',precio:8000,costo:0,estado:'activo'},
+  {nombre:'Tramite pasaporte (orientacion y formularios)',categoria:'Tramites y gestiones',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Tramite visa (orientacion y formularios)',categoria:'Tramites y gestiones',precio:8000,costo:0,estado:'activo'},
+  {nombre:'Formulario y tramite RUT DIAN',categoria:'Tramites y gestiones',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Actualizacion RUT DIAN',categoria:'Tramites y gestiones',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Declaracion de renta basica (orientacion)',categoria:'Tramites y gestiones',precio:10000,costo:0,estado:'activo'},
+  {nombre:'Consulta y actualizacion SISBEN IV',categoria:'Tramites y gestiones',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Pago impuesto predial',categoria:'Tramites y gestiones',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Pago impuesto de vehiculos',categoria:'Tramites y gestiones',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Tramite licencia de conduccion',categoria:'Tramites y gestiones',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Duplicado cedula de ciudadania (solicitud)',categoria:'Tramites y gestiones',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Duplicado libreta militar',categoria:'Tramites y gestiones',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Radicacion derecho de peticion',categoria:'Tramites y gestiones',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Consulta puntaje ICFES',categoria:'Tramites y gestiones',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Inscripcion ICFES (orientacion)',categoria:'Tramites y gestiones',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Consulta deudas en centrales de riesgo',categoria:'Tramites y gestiones',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Inscripcion a convocatorias del Estado',categoria:'Tramites y gestiones',precio:5000,costo:0,estado:'activo'},
+  // ── PAGOS Y RECAUDOS ──
+  {nombre:'Pago servicio de agua',categoria:'Pagos y recaudos',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Pago servicio de energia electrica',categoria:'Pagos y recaudos',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Pago servicio de gas natural',categoria:'Pagos y recaudos',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Pago internet hogar',categoria:'Pagos y recaudos',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Pago TV por cable',categoria:'Pagos y recaudos',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Pago factura celular Claro',categoria:'Pagos y recaudos',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Pago factura celular Movistar',categoria:'Pagos y recaudos',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Pago factura celular Tigo',categoria:'Pagos y recaudos',precio:2000,costo:0,estado:'activo'},
+  {nombre:'Envio giro nacional Efecty / Western Union',categoria:'Pagos y recaudos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Recarga tarjeta MIO Cali',categoria:'Pagos y recaudos',precio:1000,costo:0,estado:'activo'},
+  {nombre:'Recarga tarjeta Transmilenio Bogota',categoria:'Pagos y recaudos',precio:1000,costo:0,estado:'activo'},
+  {nombre:'Pago multa de transito en linea',categoria:'Pagos y recaudos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Pago de matricula escolar en linea',categoria:'Pagos y recaudos',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Corresponsal bancario (retiro/consignacion)',categoria:'Pagos y recaudos',precio:2000,costo:0,estado:'activo'},
+  // ── FOTOS Y CARNÉS ──
+  {nombre:'Fotos tipo documento 3x4 (2 fotos)',categoria:'Fotos y carnes',precio:4000,costo:1200,estado:'activo'},
+  {nombre:'Fotos tipo documento 4x5 (2 fotos)',categoria:'Fotos y carnes',precio:5000,costo:1500,estado:'activo'},
+  {nombre:'Foto para pasaporte (fondo blanco)',categoria:'Fotos y carnes',precio:5000,costo:1500,estado:'activo'},
+  {nombre:'Foto para cedula de ciudadania',categoria:'Fotos y carnes',precio:4000,costo:1200,estado:'activo'},
+  {nombre:'Foto para licencia de conduccion',categoria:'Fotos y carnes',precio:4000,costo:1200,estado:'activo'},
+  {nombre:'Carnet estudiantil (diseno + impresion + plastificado)',categoria:'Fotos y carnes',precio:5000,costo:1500,estado:'activo'},
+  {nombre:'Carnet laboral personalizado',categoria:'Fotos y carnes',precio:6000,costo:2000,estado:'activo'},
+  // ── OTROS ──
+  {nombre:'Venta de minutos a celular (por minuto)',categoria:'Otros servicios',precio:200,costo:150,estado:'activo'},
+  {nombre:'Uso de computador por hora',categoria:'Otros servicios',precio:2500,costo:0,estado:'activo'},
+  {nombre:'Uso de computador 30 minutos',categoria:'Otros servicios',precio:1500,costo:0,estado:'activo'},
+  {nombre:'Envio de correo electronico con adjunto',categoria:'Otros servicios',precio:1000,costo:0,estado:'activo'},
+  {nombre:'Descarga e instalacion de app en celular',categoria:'Otros servicios',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Creacion de cuenta Google / correo',categoria:'Otros servicios',precio:3000,costo:0,estado:'activo'},
+  {nombre:'Asesoria en tramites virtuales',categoria:'Otros servicios',precio:5000,costo:0,estado:'activo'},
+  {nombre:'Impresion recibo de pago / comprobante',categoria:'Otros servicios',precio:500,costo:100,estado:'activo'},
+];
+
+// ===== PRODUCTOS PREDETERMINADOS =====
+const PRODUCTOS_DEFAULT = [
+  {nombre:'Lapiz Norma',categoria:'Escritura',precioCompra:450,precioVenta:1000,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Lapiz Artesco Fantasia',categoria:'Escritura',precioCompra:400,precioVenta:900,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Lapiz Artesco T/Multiplicar',categoria:'Escritura',precioCompra:400,precioVenta:900,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Lapicero Kilometrico 100 negro',categoria:'Escritura',precioCompra:450,precioVenta:1200,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Lapicero Kilometrico 100 rojo',categoria:'Escritura',precioCompra:450,precioVenta:1200,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Lapicero Kilometrico 100 azul',categoria:'Escritura',precioCompra:450,precioVenta:1200,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Lapicero Kilometrico 100 fucsia',categoria:'Escritura',precioCompra:450,precioVenta:1200,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Lapicero Kilometrico 100 morado',categoria:'Escritura',precioCompra:450,precioVenta:1200,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Lapicero Economico ZP 052',categoria:'Escritura',precioCompra:270,precioVenta:800,cantidad:10,stockMin:5,estado:'activo'},
+  {nombre:'Corrector Lapiz Offiesco OE-250 8ml',categoria:'Escritura',precioCompra:800,precioVenta:2000,cantidad:5,stockMin:5,estado:'activo'},
+  {nombre:'Corrector Lapiz Offiesco Colores OE-252',categoria:'Escritura',precioCompra:850,precioVenta:2200,cantidad:5,stockMin:5,estado:'activo'},
+  {nombre:'Lapiz Rojo Geniosito',categoria:'Escritura',precioCompra:300,precioVenta:1000,cantidad:5,stockMin:5,estado:'activo'},
+  {nombre:'Regla Geniosito 30cm',categoria:'Utiles escolares',precioCompra:550,precioVenta:1500,cantidad:4,stockMin:5,estado:'activo'},
+  {nombre:'Regla Metalica 30cm Bodega',categoria:'Utiles escolares',precioCompra:1200,precioVenta:3000,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Sobre Blanco Rectangular',categoria:'Archivo y organizacion',precioCompra:59,precioVenta:300,cantidad:100,stockMin:5,estado:'activo'},
+  {nombre:'Sobre Lluvia Bond surtido',categoria:'Archivo y organizacion',precioCompra:167,precioVenta:800,cantidad:15,stockMin:5,estado:'activo'},
+  {nombre:'Gancho Cosedora x1000 grapas',categoria:'Insumos de oficina',precioCompra:700,precioVenta:2200,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Block Carta Cuadros x70 hojas',categoria:'Cuadernos y blocks',precioCompra:2950,precioVenta:4200,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Block Carta Linea x70 hojas',categoria:'Cuadernos y blocks',precioCompra:2950,precioVenta:4200,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Block Carta Sin Linea x70 hojas',categoria:'Cuadernos y blocks',precioCompra:2950,precioVenta:4200,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Corrector de Cinta WB 8313',categoria:'Escritura',precioCompra:1400,precioVenta:2700,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Tijera Punta Roma Economica',categoria:'Utiles escolares',precioCompra:800,precioVenta:1800,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Papel Silueta 1/8 x7 (paquete)',categoria:'Papeles y cartulinas',precioCompra:700,precioVenta:400,cantidad:3,stockMin:5,estado:'activo'},
+  {nombre:'Contrato de Vehiculo CIO (paquete)',categoria:'Insumos de oficina',precioCompra:1200,precioVenta:3200,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Contrato Arrendamiento CIO (paquete)',categoria:'Insumos de oficina',precioCompra:1200,precioVenta:3200,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Hoja de Vida Doble Minerva 10-03 (paquete x20)',categoria:'Insumos de oficina',precioCompra:689,precioVenta:1400,cantidad:14,stockMin:5,estado:'activo'},
+  {nombre:'Carpeta Presentacion Carta',categoria:'Archivo y organizacion',precioCompra:340,precioVenta:1000,cantidad:25,stockMin:5,estado:'activo'},
+  {nombre:'Sobre Manila Carta 22.5x29',categoria:'Archivo y organizacion',precioCompra:150,precioVenta:500,cantidad:25,stockMin:5,estado:'activo'},
+  {nombre:'Sobre Manila Oficio 25x35',categoria:'Archivo y organizacion',precioCompra:185,precioVenta:600,cantidad:25,stockMin:5,estado:'activo'},
+  {nombre:'Bisturi Economico Grande',categoria:'Utiles escolares',precioCompra:550,precioVenta:1300,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Bisturi Economico Pequeno',categoria:'Utiles escolares',precioCompra:350,precioVenta:1000,cantidad:4,stockMin:5,estado:'activo'},
+  {nombre:'Color Paper Mate 3mm x12 corto',categoria:'Colores y arte',precioCompra:2000,precioVenta:3500,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Color Cosmico x12 D/Punta',categoria:'Colores y arte',precioCompra:3450,precioVenta:5500,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Color Cosmico x12 Largo',categoria:'Colores y arte',precioCompra:3200,precioVenta:5200,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Color Pintaloco x12',categoria:'Colores y arte',precioCompra:4250,precioVenta:7200,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Pegante Rapid 20gr',categoria:'Pegantes y adhesivos',precioCompra:580,precioVenta:1200,cantidad:24,stockMin:5,estado:'activo'},
+  {nombre:'Tempera Carosello PK x6',categoria:'Colores y arte',precioCompra:2200,precioVenta:3700,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Juego Geometrico Geniosito 8025',categoria:'Utiles escolares',precioCompra:2500,precioVenta:4000,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Cuaderno Cosido Importado 100h L/S',categoria:'Cuadernos y blocks',precioCompra:2100,precioVenta:3200,cantidad:3,stockMin:5,estado:'activo'},
+  {nombre:'Cuaderno Cosido Importado 100h C/S',categoria:'Cuadernos y blocks',precioCompra:2100,precioVenta:3200,cantidad:3,stockMin:5,estado:'activo'},
+  {nombre:'Cuaderno Cosido Importado 50h L/S',categoria:'Cuadernos y blocks',precioCompra:1680,precioVenta:2700,cantidad:3,stockMin:5,estado:'activo'},
+  {nombre:'Cuaderno Cosido Importado 50h C/S',categoria:'Cuadernos y blocks',precioCompra:1680,precioVenta:2700,cantidad:3,stockMin:5,estado:'activo'},
+  {nombre:'Cuaderno Importado 85-100h',categoria:'Cuadernos y blocks',precioCompra:2850,precioVenta:4000,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Cuaderno Importado 85-100h C/S',categoria:'Cuadernos y blocks',precioCompra:2850,precioVenta:4000,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Cuaderno Importado 105h',categoria:'Cuadernos y blocks',precioCompra:3850,precioVenta:5300,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Papel Cartulina Negra 1/8 (pte x7)',categoria:'Papeles y cartulinas',precioCompra:1200,precioVenta:500,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Papel Cartulina Blanca 1/8 (pte x7)',categoria:'Papeles y cartulinas',precioCompra:1000,precioVenta:700,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Papel Cartulina Suave 1/8 (pte x7)',categoria:'Papeles y cartulinas',precioCompra:1000,precioVenta:700,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Papel Cartulina Plana 1/8 (pte x7)',categoria:'Papeles y cartulinas',precioCompra:1200,precioVenta:600,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Plastilina Rapid Corta x9',categoria:'Colores y arte',precioCompra:1000,precioVenta:2000,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Plastilina Rapid Larga x9 (paquete)',categoria:'Colores y arte',precioCompra:1550,precioVenta:3500,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Plumon Platino 1871 x12 Delgado',categoria:'Escritura',precioCompra:1350,precioVenta:2400,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Papel Cartulina Suave 70x100',categoria:'Papeles y cartulinas',precioCompra:800,precioVenta:2000,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Sacapuntas Metalico Sencillo',categoria:'Escritura',precioCompra:250,precioVenta:700,cantidad:24,stockMin:5,estado:'activo'},
+  {nombre:'Borrador 612 (caja x12)',categoria:'Escritura',precioCompra:2600,precioVenta:900,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Borrador 624 (caja x24)',categoria:'Escritura',precioCompra:2600,precioVenta:500,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Sacapuntas Mini Carro',categoria:'Escritura',precioCompra:300,precioVenta:1000,cantidad:3,stockMin:5,estado:'activo'},
+  {nombre:'Sacapuntas Deposito Doble Ref 317',categoria:'Escritura',precioCompra:950,precioVenta:2400,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Fomi Carta (paquete x10 surtido)',categoria:'Manualidades',precioCompra:265,precioVenta:800,cantidad:10,stockMin:5,estado:'activo'},
+  {nombre:'Papel Seda (paquete x10)',categoria:'Papeles y cartulinas',precioCompra:2500,precioVenta:700,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Resaltador Zeppelin ZP 345',categoria:'Escritura',precioCompra:1150,precioVenta:3200,cantidad:6,stockMin:5,estado:'activo'},
+  {nombre:'Marcador Permanente Zeppelin ZP 430',categoria:'Escritura',precioCompra:1100,precioVenta:2200,cantidad:6,stockMin:5,estado:'activo'},
+  {nombre:'Marcador Permanente Pelikan 420',categoria:'Escritura',precioCompra:1350,precioVenta:700,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Marcador Sharpie P/Delgada Negro',categoria:'Escritura',precioCompra:2300,precioVenta:3800,cantidad:3,stockMin:5,estado:'activo'},
+  {nombre:'Marcador Permanente P.Delgada Ofiesco 528',categoria:'Escritura',precioCompra:1650,precioVenta:3200,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Marcador Borrable Pelikan 426',categoria:'Escritura',precioCompra:1650,precioVenta:3200,cantidad:6,stockMin:5,estado:'activo'},
+  {nombre:'Cosedora Mini 1068A',categoria:'Insumos de oficina',precioCompra:2550,precioVenta:3800,cantidad:3,stockMin:5,estado:'activo'},
+  {nombre:'Papel de Regalo 70x50 Primavera (pte x10)',categoria:'Papeles y cartulinas',precioCompra:320,precioVenta:1000,cantidad:10,stockMin:5,estado:'activo'},
+  {nombre:'Micropunta Parchesitos',categoria:'Escritura',precioCompra:750,precioVenta:1800,cantidad:3,stockMin:5,estado:'activo'},
+  {nombre:'Cinta Transparente 12x20 (taco x12)',categoria:'Pegantes y adhesivos',precioCompra:308,precioVenta:800,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Cinta Enmascarar Andina 18x20',categoria:'Pegantes y adhesivos',precioCompra:1600,precioVenta:3000,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Cinta Enmascarar Andina 24x20',categoria:'Pegantes y adhesivos',precioCompra:2150,precioVenta:3800,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Cinta Transparente Andina 48x40',categoria:'Pegantes y adhesivos',precioCompra:2850,precioVenta:4200,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Silicona Delgada Individual',categoria:'Pegantes y adhesivos',precioCompra:300,precioVenta:800,cantidad:6,stockMin:5,estado:'activo'},
+  {nombre:'Silicona Gruesa Individual',categoria:'Pegantes y adhesivos',precioCompra:700,precioVenta:1500,cantidad:6,stockMin:5,estado:'activo'},
+  {nombre:'Silicona Liquida Economica 30ml',categoria:'Pegantes y adhesivos',precioCompra:1100,precioVenta:2300,cantidad:6,stockMin:5,estado:'activo'},
+  {nombre:'Clip Triton Pequeno (caja)',categoria:'Insumos de oficina',precioCompra:800,precioVenta:2000,cantidad:3,stockMin:5,estado:'activo'},
+  {nombre:'Chinche Triton (caja)',categoria:'Insumos de oficina',precioCompra:1300,precioVenta:2200,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Palo de Paletas Natural (paquete x50)',categoria:'Manualidades',precioCompra:900,precioVenta:2500,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Palo de Paletas Colores 892-1',categoria:'Manualidades',precioCompra:1200,precioVenta:2500,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Palo de Pincho (paquete x100 25cm)',categoria:'Manualidades',precioCompra:2850,precioVenta:4200,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Aviso Se Vende 1/4',categoria:'Insumos de oficina',precioCompra:204,precioVenta:1000,cantidad:25,stockMin:5,estado:'activo'},
+  {nombre:'Aviso Se Arrienda 1/4',categoria:'Insumos de oficina',precioCompra:204,precioVenta:1000,cantidad:25,stockMin:5,estado:'activo'},
+  {nombre:'Papel Carton Paja Octavos',categoria:'Papeles y cartulinas',precioCompra:450,precioVenta:1200,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Vinilo Rapid Colores 33gr',categoria:'Colores y arte',precioCompra:770,precioVenta:2000,cantidad:1,stockMin:5,estado:'activo'},
+  {nombre:'Pincel Madera Plano Economico',categoria:'Colores y arte',precioCompra:546,precioVenta:500,cantidad:12,stockMin:5,estado:'activo'},
+  {nombre:'Hilo Cartufo x6 Doc',categoria:'Insumos de oficina',precioCompra:4635,precioVenta:1500,cantidad:2,stockMin:5,estado:'activo'},
+  {nombre:'Tiza Color',categoria:'Utiles escolares',precioCompra:150,precioVenta:300,cantidad:20,stockMin:5,estado:'activo'},
+  {nombre:'Tiza Blanca',categoria:'Utiles escolares',precioCompra:125,precioVenta:300,cantidad:10,stockMin:5,estado:'activo'},
+  {nombre:'Papel Tornasol Liso (pliego)',categoria:'Papeles y cartulinas',precioCompra:360,precioVenta:1000,cantidad:5,stockMin:5,estado:'activo'},
+  {nombre:'Sobre Manila 1/2 Carta 17.5x24',categoria:'Archivo y organizacion',precioCompra:120,precioVenta:400,cantidad:25,stockMin:5,estado:'activo'}
+];
+
+
+// ===== INICIALIZAR =====
+// Datos guardados del inventario (importados del backup 2026-06-07)
+const DATOS_GUARDADOS_PRODUCTOS = [{"id": "1780786509238", "nombre": "Lapiz Norma", "categoria": "Escritura", "precioCompra": 450, "precioVenta": 1000, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": "1780786509239", "nombre": "Lapiz Artesco Fantasia", "categoria": "Escritura", "precioCompra": 400, "precioVenta": 900, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780786509240, "nombre": "Lapiz Artesco T/Multiplicar", "categoria": "Escritura", "precioCompra": 400, "precioVenta": 900, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780786509241, "nombre": "Lapicero Kilometrico 100 negro", "categoria": "Escritura", "precioCompra": 450, "precioVenta": 1200, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780786509242, "nombre": "Lapicero Kilometrico 100 rojo", "categoria": "Escritura", "precioCompra": 450, "precioVenta": 1200, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780786509243, "nombre": "Lapicero Kilometrico 100 azul", "categoria": "Escritura", "precioCompra": 450, "precioVenta": 1200, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780786509244, "nombre": "Lapicero Kilometrico 100 fucsia", "categoria": "Escritura", "precioCompra": 450, "precioVenta": 1200, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780786509245, "nombre": "Lapicero Kilometrico 100 morado", "categoria": "Escritura", "precioCompra": 450, "precioVenta": 1200, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780868199536, "nombre": "Lapicero Economico ZP 052", "categoria": "Escritura", "precioCompra": 270, "precioVenta": 800, "cantidad": 10, "stockMin": 5, "estado": "activo"}, {"id": 1780868199537, "nombre": "Corrector Lapiz Offiesco OE-250 8ml", "categoria": "Escritura", "precioCompra": 800, "precioVenta": 2000, "cantidad": 5, "stockMin": 5, "estado": "activo"}, {"id": 1780868199538, "nombre": "Corrector Lapiz Offiesco Colores OE-252", "categoria": "Escritura", "precioCompra": 850, "precioVenta": 2200, "cantidad": 5, "stockMin": 5, "estado": "activo"}, {"id": 1780786509249, "nombre": "Lapiz Rojo Geniosito", "categoria": "Escritura", "precioCompra": 300, "precioVenta": 1000, "cantidad": 5, "stockMin": 5, "estado": "activo"}, {"id": 1780868199540, "nombre": "Regla Geniosito 30cm", "categoria": "Utiles escolares", "precioCompra": 550, "precioVenta": 1500, "cantidad": 4, "stockMin": 5, "estado": "activo"}, {"id": 1780786509251, "nombre": "Regla Metalica 30cm Bodega", "categoria": "Utiles escolares", "precioCompra": 1200, "precioVenta": 3000, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780782238299, "nombre": "Sobre Blanco Rectangular", "categoria": "Archivo y organizacion", "precioCompra": 59, "precioVenta": 300, "cantidad": 100, "stockMin": 5, "estado": "activo"}, {"id": 1780868199543, "nombre": "Sobre Lluvia Bond surtido", "categoria": "Archivo y organizacion", "precioCompra": 167, "precioVenta": 800, "cantidad": 15, "stockMin": 5, "estado": "activo"}, {"id": 1780782238301, "nombre": "Gancho Cosedora x1000 grapas", "categoria": "Insumos de oficina", "precioCompra": 700, "precioVenta": 2200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780782238302, "nombre": "Block Carta Cuadros x70 hojas", "categoria": "Cuadernos y blocks", "precioCompra": 2950, "precioVenta": 4200, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780868199546, "nombre": "Block Carta Linea x70 hojas", "categoria": "Cuadernos y blocks", "precioCompra": 2950, "precioVenta": 4200, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780786509257, "nombre": "Block Carta Sin Linea x70 hojas", "categoria": "Cuadernos y blocks", "precioCompra": 2950, "precioVenta": 4200, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780782238305, "nombre": "Corrector de Cinta WB 8313", "categoria": "Escritura", "precioCompra": 1400, "precioVenta": 2700, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780786509259, "nombre": "Tijera Punta Roma Economica", "categoria": "Utiles escolares", "precioCompra": 800, "precioVenta": 1800, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780782238307, "nombre": "Papel Silueta 1/8 x7 (paquete)", "categoria": "Papeles y cartulinas", "precioCompra": 700, "precioVenta": 400, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": 1780868199551, "nombre": "Contrato de Vehiculo CIO (paquete)", "categoria": "Insumos de oficina", "precioCompra": 1200, "precioVenta": 3200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780782238309, "nombre": "Contrato Arrendamiento CIO (paquete)", "categoria": "Insumos de oficina", "precioCompra": 1200, "precioVenta": 3200, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780782238310, "nombre": "Hoja de Vida Doble Minerva 10-03 (paquete x20)", "categoria": "Insumos de oficina", "precioCompra": 689, "precioVenta": 1400, "cantidad": 14, "stockMin": 5, "estado": "activo"}, {"id": 1780786509264, "nombre": "Carpeta Presentacion Carta", "categoria": "Archivo y organizacion", "precioCompra": 340, "precioVenta": 1000, "cantidad": 25, "stockMin": 5, "estado": "activo"}, {"id": 1780868199555, "nombre": "Sobre Manila Carta 22.5x29", "categoria": "Archivo y organizacion", "precioCompra": 150, "precioVenta": 500, "cantidad": 25, "stockMin": 5, "estado": "activo"}, {"id": 1780868199556, "nombre": "Sobre Manila Oficio 25x35", "categoria": "Archivo y organizacion", "precioCompra": 185, "precioVenta": 600, "cantidad": 25, "stockMin": 5, "estado": "activo"}, {"id": 1780786509267, "nombre": "Bisturi Economico Grande", "categoria": "Utiles escolares", "precioCompra": 550, "precioVenta": 1300, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780866256541, "nombre": "Bisturi Economico Pequeno", "categoria": "Utiles escolares", "precioCompra": 350, "precioVenta": 1000, "cantidad": 4, "stockMin": 5, "estado": "activo"}, {"id": 1780868199559, "nombre": "Color Paper Mate 3mm x12 corto", "categoria": "Colores y arte", "precioCompra": 2000, "precioVenta": 3500, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780868199560, "nombre": "Color Cosmico x12 D/Punta", "categoria": "Colores y arte", "precioCompra": 3450, "precioVenta": 5500, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780786509271, "nombre": "Color Cosmico x12 Largo", "categoria": "Colores y arte", "precioCompra": 3200, "precioVenta": 5200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780782238319, "nombre": "Color Pintaloco x12", "categoria": "Colores y arte", "precioCompra": 4250, "precioVenta": 7200, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780782238320, "nombre": "Pegante Rapid 20gr", "categoria": "Pegantes y adhesivos", "precioCompra": 580, "precioVenta": 1200, "cantidad": 24, "stockMin": 5, "estado": "activo"}, {"id": 1780782238321, "nombre": "Tempera Carosello PK x6", "categoria": "Colores y arte", "precioCompra": 2200, "precioVenta": 3700, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780786509275, "nombre": "Juego Geometrico Geniosito 8025", "categoria": "Utiles escolares", "precioCompra": 2500, "precioVenta": 4000, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780868199566, "nombre": "Cuaderno Cosido Importado 100h L/S", "categoria": "Cuadernos y blocks", "precioCompra": 2100, "precioVenta": 3200, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": 1780868199567, "nombre": "Cuaderno Cosido Importado 100h C/S", "categoria": "Cuadernos y blocks", "precioCompra": 2100, "precioVenta": 3200, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": 1780868199568, "nombre": "Cuaderno Cosido Importado 50h L/S", "categoria": "Cuadernos y blocks", "precioCompra": 1680, "precioVenta": 2700, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": 1780868199569, "nombre": "Cuaderno Cosido Importado 50h C/S", "categoria": "Cuadernos y blocks", "precioCompra": 1680, "precioVenta": 2700, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": 1780868199570, "nombre": "Cuaderno Importado 85-100h", "categoria": "Cuadernos y blocks", "precioCompra": 2850, "precioVenta": 4000, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780868199571, "nombre": "Cuaderno Importado 85-100h C/S", "categoria": "Cuadernos y blocks", "precioCompra": 2850, "precioVenta": 4000, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780868199572, "nombre": "Cuaderno Importado 105h", "categoria": "Cuadernos y blocks", "precioCompra": 3850, "precioVenta": 5300, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780868199573, "nombre": "Papel Cartulina Negra 1/8 (pte x7)", "categoria": "Papeles y cartulinas", "precioCompra": 1200, "precioVenta": 500, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780868199574, "nombre": "Papel Cartulina Blanca 1/8 (pte x7)", "categoria": "Papeles y cartulinas", "precioCompra": 1000, "precioVenta": 700, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780868199575, "nombre": "Papel Cartulina Suave 1/8 (pte x7)", "categoria": "Papeles y cartulinas", "precioCompra": 1000, "precioVenta": 700, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780868199576, "nombre": "Papel Cartulina Plana 1/8 (pte x7)", "categoria": "Papeles y cartulinas", "precioCompra": 1200, "precioVenta": 600, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780782238334, "nombre": "Plastilina Rapid Corta x9", "categoria": "Colores y arte", "precioCompra": 1000, "precioVenta": 2000, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780782238335, "nombre": "Plastilina Rapid Larga x9 (paquete)", "categoria": "Colores y arte", "precioCompra": 1550, "precioVenta": 3500, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780786509289, "nombre": "Plumon Platino 1871 x12 Delgado", "categoria": "Escritura", "precioCompra": 1350, "precioVenta": 2400, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780868199580, "nombre": "Papel Cartulina Suave 70x100", "categoria": "Papeles y cartulinas", "precioCompra": 800, "precioVenta": 2000, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780786509291, "nombre": "Sacapuntas Metalico Sencillo", "categoria": "Escritura", "precioCompra": 250, "precioVenta": 700, "cantidad": 24, "stockMin": 5, "estado": "activo"}, {"id": 1780782238339, "nombre": "Borrador 612 (caja x12)", "categoria": "Escritura", "precioCompra": 2600, "precioVenta": 900, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780782238340, "nombre": "Borrador 624 (caja x24)", "categoria": "Escritura", "precioCompra": 2600, "precioVenta": 500, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780782238341, "nombre": "Sacapuntas Mini Carro", "categoria": "Escritura", "precioCompra": 300, "precioVenta": 1000, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": 1780786509295, "nombre": "Sacapuntas Deposito Doble Ref 317", "categoria": "Escritura", "precioCompra": 950, "precioVenta": 2400, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780782238343", "nombre": "Fomi Carta (paquete x10 surtido)", "categoria": "Manualidades", "precioCompra": 265, "precioVenta": 800, "cantidad": 10, "stockMin": 5, "estado": "activo"}, {"id": 1780782238344, "nombre": "Papel Seda (paquete x10)", "categoria": "Papeles y cartulinas", "precioCompra": 2500, "precioVenta": 700, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780866256571, "nombre": "Resaltador Zeppelin ZP 345", "categoria": "Escritura", "precioCompra": 1150, "precioVenta": 3200, "cantidad": 6, "stockMin": 5, "estado": "activo"}, {"id": 1780868199589, "nombre": "Marcador Permanente Zeppelin ZP 430", "categoria": "Escritura", "precioCompra": 1100, "precioVenta": 2200, "cantidad": 6, "stockMin": 5, "estado": "activo"}, {"id": 1780868199590, "nombre": "Marcador Permanente Pelikan 420", "categoria": "Escritura", "precioCompra": 1350, "precioVenta": 700, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780782238348, "nombre": "Marcador Sharpie P/Delgada Negro", "categoria": "Escritura", "precioCompra": 2300, "precioVenta": 3800, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": 1780868199592, "nombre": "Marcador Permanente P.Delgada Ofiesco 528", "categoria": "Escritura", "precioCompra": 1650, "precioVenta": 3200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780868199593, "nombre": "Marcador Borrable Pelikan 426", "categoria": "Escritura", "precioCompra": 1650, "precioVenta": 3200, "cantidad": 6, "stockMin": 5, "estado": "activo"}, {"id": 1780782238351, "nombre": "Cosedora Mini 1068A", "categoria": "Insumos de oficina", "precioCompra": 2550, "precioVenta": 3800, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": 1780782238352, "nombre": "Papel de Regalo 70x50 Primavera (pte x10)", "categoria": "Papeles y cartulinas", "precioCompra": 320, "precioVenta": 1000, "cantidad": 10, "stockMin": 5, "estado": "activo"}, {"id": 1780782238353, "nombre": "Micropunta Parchesitos", "categoria": "Escritura", "precioCompra": 750, "precioVenta": 1800, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": 1780868199597, "nombre": "Cinta Transparente 12x20 (taco x12)", "categoria": "Pegantes y adhesivos", "precioCompra": 308, "precioVenta": 800, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780782238355, "nombre": "Cinta Enmascarar Andina 18x20", "categoria": "Pegantes y adhesivos", "precioCompra": 1600, "precioVenta": 3000, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780782238356, "nombre": "Cinta Enmascarar Andina 24x20", "categoria": "Pegantes y adhesivos", "precioCompra": 2150, "precioVenta": 3800, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780868199600, "nombre": "Cinta Transparente Andina 48x40", "categoria": "Pegantes y adhesivos", "precioCompra": 2850, "precioVenta": 4200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780782238358, "nombre": "Silicona Delgada Individual", "categoria": "Pegantes y adhesivos", "precioCompra": 300, "precioVenta": 800, "cantidad": 6, "stockMin": 5, "estado": "activo"}, {"id": 1780782238359, "nombre": "Silicona Gruesa Individual", "categoria": "Pegantes y adhesivos", "precioCompra": 700, "precioVenta": 1500, "cantidad": 6, "stockMin": 5, "estado": "activo"}, {"id": 1780786509313, "nombre": "Silicona Liquida Economica 30ml", "categoria": "Pegantes y adhesivos", "precioCompra": 1100, "precioVenta": 2300, "cantidad": 6, "stockMin": 5, "estado": "activo"}, {"id": 1780868199604, "nombre": "Clip Triton Pequeno (caja)", "categoria": "Insumos de oficina", "precioCompra": 800, "precioVenta": 2000, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": 1780786509315, "nombre": "Chinche Triton (caja)", "categoria": "Insumos de oficina", "precioCompra": 1300, "precioVenta": 2200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780782238363", "nombre": "Palo de Paletas Natural (paquete x50)", "categoria": "Manualidades", "precioCompra": 900, "precioVenta": 2500, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780868199607, "nombre": "Palo de Paletas Colores 892-1", "categoria": "Manualidades", "precioCompra": 1200, "precioVenta": 2500, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780782238365, "nombre": "Palo de Pincho (paquete x100 25cm)", "categoria": "Manualidades", "precioCompra": 2850, "precioVenta": 4200, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780782238366, "nombre": "Aviso Se Vende 1/4", "categoria": "Insumos de oficina", "precioCompra": 204, "precioVenta": 1000, "cantidad": 25, "stockMin": 5, "estado": "activo"}, {"id": 1780782238367, "nombre": "Aviso Se Arrienda 1/4", "categoria": "Insumos de oficina", "precioCompra": 204, "precioVenta": 1000, "cantidad": 25, "stockMin": 5, "estado": "activo"}, {"id": 1780868199611, "nombre": "Papel Carton Paja Octavos", "categoria": "Papeles y cartulinas", "precioCompra": 450, "precioVenta": 1200, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780868199612, "nombre": "Vinilo Rapid Colores 33gr", "categoria": "Colores y arte", "precioCompra": 770, "precioVenta": 2000, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780868199613, "nombre": "Pincel Madera Plano Economico", "categoria": "Colores y arte", "precioCompra": 546, "precioVenta": 500, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780782238371, "nombre": "Hilo Cartufo x6 Doc", "categoria": "Insumos de oficina", "precioCompra": 4635, "precioVenta": 1500, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780868364455, "nombre": "Tiza Color", "categoria": "Utiles escolares", "precioCompra": 150, "precioVenta": 300, "cantidad": 20, "stockMin": 5, "estado": "activo"}, {"id": 1780782238373, "nombre": "Tiza Blanca", "categoria": "Utiles escolares", "precioCompra": 125, "precioVenta": 300, "cantidad": 10, "stockMin": 5, "estado": "activo"}, {"id": 1780782238374, "nombre": "Papel Tornasol Liso (pliego)", "categoria": "Papeles y cartulinas", "precioCompra": 360, "precioVenta": 1000, "cantidad": 5, "stockMin": 5, "estado": "activo"}, {"id": 1780868199618, "nombre": "Sobre Manila 1/2 Carta 17.5x24", "categoria": "Archivo y organizacion", "precioCompra": 120, "precioVenta": 400, "cantidad": 25, "stockMin": 5, "estado": "activo"}, {"id": "1780786509246", "nombre": "Lapicero Economico", "categoria": "Escritura", "precioCompra": 270, "precioVenta": 800, "cantidad": 10, "stockMin": 5, "estado": "activo"}, {"id": "1780786509247", "nombre": "Corrector Lapiz Offiesco ECONOMICO", "categoria": "Escritura", "precioCompra": 800, "precioVenta": 2000, "cantidad": 5, "stockMin": 5, "estado": "activo"}, {"id": "1780786509248", "nombre": "Corrector Lapiz Offiesco COLORES", "categoria": "Escritura", "precioCompra": 850, "precioVenta": 2200, "cantidad": 5, "stockMin": 5, "estado": "activo"}, {"id": "1780786509261", "nombre": "Compra y venta de vehiculo (paquete)", "categoria": "Insumos de oficina", "precioCompra": 1200, "precioVenta": 3200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780782238312", "nombre": "Sobre Manila Carta", "categoria": "Archivo y organizacion", "precioCompra": 150, "precioVenta": 500, "cantidad": 25, "stockMin": 5, "estado": "activo"}, {"id": "1780782238313", "nombre": "Sobre Manila Oficio", "categoria": "Archivo y organizacion", "precioCompra": 185, "precioVenta": 600, "cantidad": 25, "stockMin": 5, "estado": "activo"}, {"id": "1780782238316", "nombre": "Color Paper Mate  x12 Pequeño", "categoria": "Colores y arte", "precioCompra": 2000, "precioVenta": 3500, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780786509270", "nombre": "Color Cosmico x12 Doble/Punta", "categoria": "Colores y arte", "precioCompra": 3450, "precioVenta": 5500, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780782238330", "nombre": "Cartulina Negra 1/8 (pte x7)", "categoria": "Papeles y cartulinas", "precioCompra": 1200, "precioVenta": 500, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": "1780782238331", "nombre": "Cartulina Blanca 1/8 (pte x7)", "categoria": "Papeles y cartulinas", "precioCompra": 1000, "precioVenta": 700, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780782238332", "nombre": "Cartulina Suave 1/8 (pte x7)", "categoria": "Papeles y cartulinas", "precioCompra": 1000, "precioVenta": 700, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780782238333", "nombre": "Cartulina Plana 1/8 (pte x7)", "categoria": "Papeles y cartulinas", "precioCompra": 1200, "precioVenta": 600, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": "1780866256575", "nombre": "Marcador Permanente P.Delgada Ofiesco 528 NEGRO", "categoria": "Escritura", "precioCompra": 1650, "precioVenta": 3200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780782238354", "nombre": "Cinta Transparente Pequeña (taco x12)", "categoria": "Pegantes y adhesivos", "precioCompra": 308, "precioVenta": 800, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": "1780782238364", "nombre": "Palo de Paletas Colores", "categoria": "Manualidades", "precioCompra": 1200, "precioVenta": 2500, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": "1780786509321", "nombre": "Carton Paja Octavos", "categoria": "Papeles y cartulinas", "precioCompra": 450, "precioVenta": 1200, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": "1780782238372", "nombre": "Tiza Colores Surtidos", "categoria": "Utiles escolares", "precioCompra": 150, "precioVenta": 300, "cantidad": 20, "stockMin": 5, "estado": "activo"}, {"id": "1780782238297", "nombre": "Regla Geniosito Rosado 30cm", "categoria": "Utiles escolares", "precioCompra": 550, "precioVenta": 1500, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": "1780786509268", "nombre": "Bisturi Economico Pequeno NARANJA", "categoria": "Utiles escolares", "precioCompra": 350, "precioVenta": 1000, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": "1780782238323", "nombre": "Cuaderno Cosido GRANDE 100h /Cuadriculado/", "categoria": "Cuadernos y blocks", "precioCompra": 2100, "precioVenta": 3200, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": "1780782238324", "nombre": "Cuaderno Cosido GRANDE 100h /Linea/", "categoria": "Cuadernos y blocks", "precioCompra": 2100, "precioVenta": 3200, "cantidad": 5, "stockMin": 5, "estado": "activo"}, {"id": "1780782238325", "nombre": "Cuaderno Cosido GRANDE 50h /Cuadriculado/", "categoria": "Cuadernos y blocks", "precioCompra": 1680, "precioVenta": 2700, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": "1780782238326", "nombre": "Cuaderno Cosido GRANDE 50h /Linea/", "categoria": "Cuadernos y blocks", "precioCompra": 1680, "precioVenta": 2700, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": "1780782238328", "nombre": "Cuaderno ARGOLLADO Pequeño 100h /Cuadriculado/", "categoria": "Cuadernos y blocks", "precioCompra": 2850, "precioVenta": 4000, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780782238337", "nombre": "Cartulina Pliego", "categoria": "Papeles y cartulinas", "precioCompra": 800, "precioVenta": 2000, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": "1780782238345", "nombre": "Resaltador Zeppelin Amarillo", "categoria": "Escritura", "precioCompra": 1150, "precioVenta": 3200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780782238346", "nombre": "Marcador Permanente Zeppelin Verde", "categoria": "Escritura", "precioCompra": 1100, "precioVenta": 2200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780782238347", "nombre": "Marcador Permanente Pelikan ROJO", "categoria": "Escritura", "precioCompra": 1350, "precioVenta": 2700, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780782238350", "nombre": "Marcador Borrable Pelikan Rojo", "categoria": "Escritura", "precioCompra": 1650, "precioVenta": 3200, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": "1780782238357", "nombre": "Cinta Transparente Andina /ANCHA/", "categoria": "Pegantes y adhesivos", "precioCompra": 2850, "precioVenta": 4200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780782238369", "nombre": "Vinilo Rapid Verde 42gr", "categoria": "Colores y arte", "precioCompra": 770, "precioVenta": 2000, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780786509323", "nombre": "Pincel Madera # 1-6", "categoria": "Colores y arte", "precioCompra": 300, "precioVenta": 800, "cantidad": 6, "stockMin": 5, "estado": "activo"}, {"id": "1780782238375", "nombre": "Sobre Manila Media Carta", "categoria": "Útiles escolares", "precioCompra": 120, "precioVenta": 400, "cantidad": 25, "stockMin": 5, "estado": "activo"}, {"id": 1780782238285, "nombre": "Lápiz Norma", "categoria": "Escritura", "precioCompra": 450, "precioVenta": 1000, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780782238286, "nombre": "Lápiz Artesco Fantasía", "categoria": "Escritura", "precioCompra": 400, "precioVenta": 900, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780782238287, "nombre": "Lápiz Artesco T/Multiplicar", "categoria": "Escritura", "precioCompra": 400, "precioVenta": 900, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780782238296, "nombre": "Lápiz Rojo Geniosito", "categoria": "Escritura", "precioCompra": 300, "precioVenta": 1000, "cantidad": 5, "stockMin": 5, "estado": "activo"}, {"id": 1780782238304, "nombre": "Block Carta Sin Línea x70 hojas", "categoria": "Cuadernos y blocks", "precioCompra": 2950, "precioVenta": 4200, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780782238314, "nombre": "Bisturí Económico Grande", "categoria": "Útiles escolares", "precioCompra": 550, "precioVenta": 1300, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780782238315, "nombre": "Bisturí Económico Pequeño", "categoria": "Útiles escolares", "precioCompra": 350, "precioVenta": 1000, "cantidad": 4, "stockMin": 5, "estado": "activo"}, {"id": 1780782238361, "nombre": "Clip Tritón Pequeño (caja)", "categoria": "Insumos de oficina", "precioCompra": 800, "precioVenta": 2000, "cantidad": 3, "stockMin": 5, "estado": "activo"}, {"id": "1780782238368", "nombre": "Cartón Paja Octavos", "categoria": "Papeles y cartulinas", "precioCompra": 450, "precioVenta": 1200, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": "1780704252314", "nombre": "Sobre de lluvia de colores", "categoria": "Colores y arte", "precioCompra": 500, "precioVenta": 800, "cantidad": 12, "stockMin": 5, "estado": "activo"}, {"id": 1780787084672, "nombre": "Fotocopia blanco y negro", "categoria": "Impresiones y copias", "precioCompra": 0, "precioVenta": 500, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": "1780787084673", "nombre": "Fotocopia a color", "categoria": "Impresiones y copias", "precioCompra": 0, "precioVenta": 2500, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780787084674, "nombre": "Impresión blanco y negro", "categoria": "Impresiones y copias", "precioCompra": 0, "precioVenta": 300, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084675, "nombre": "Impresión a color", "categoria": "Impresiones y copias", "precioCompra": 0, "precioVenta": 700, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084676, "nombre": "Impresión fotográfica", "categoria": "Impresiones y copias", "precioCompra": 0, "precioVenta": 1500, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084679, "nombre": "Escaneo de documento", "categoria": "Digitalización y edición", "precioCompra": 0, "precioVenta": 500, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084680, "nombre": "Edición de documento (Word, PDF)", "categoria": "Digitalización y edición", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084681, "nombre": "Edición de presentación (PowerPoint)", "categoria": "Digitalización y edición", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084682, "nombre": "Transcripción de documento", "categoria": "Digitalización y edición", "precioCompra": 0, "precioVenta": 4000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084683, "nombre": "Diseño básico (volante, tarjeta, afiche)", "categoria": "Digitalización y edición", "precioCompra": 0, "precioVenta": 8000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084684, "nombre": "Conversión de archivos (PDF a Word, etc.)", "categoria": "Digitalización y edición", "precioCompra": 0, "precioVenta": 1000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084686, "nombre": "Carga de archivos desde celular o USB", "categoria": "Digitalización y edición", "precioCompra": 0, "precioVenta": 500, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084689, "nombre": "Plastificado de carné", "categoria": "Acabados", "precioCompra": 0, "precioVenta": 1500, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084690, "nombre": "Anillado", "categoria": "Acabados", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084691, "nombre": "Argollado", "categoria": "Acabados", "precioCompra": 0, "precioVenta": 4000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084695, "nombre": "Trabajo escolar completo (impresión + argollado)", "categoria": "Trabajos escolares", "precioCompra": 0, "precioVenta": 15000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084696, "nombre": "Impresión y armado de trabajo", "categoria": "Trabajos escolares", "precioCompra": 0, "precioVenta": 8000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084698, "nombre": "Presentación en diapositivas (diseño e impresión)", "categoria": "Trabajos escolares", "precioCompra": 0, "precioVenta": 12000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084699, "nombre": "Recarga Claro", "categoria": "Recargas de celular", "precioCompra": 0, "precioVenta": 1000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084700, "nombre": "Recarga Movistar", "categoria": "Recargas de celular", "precioCompra": 0, "precioVenta": 1000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084701, "nombre": "Recarga Tigo", "categoria": "Recargas de celular", "precioCompra": 0, "precioVenta": 1000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084703, "nombre": "Paquete de datos Claro", "categoria": "Recargas de celular", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084704, "nombre": "Paquete de datos Movistar", "categoria": "Recargas de celular", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084705, "nombre": "Paquete de datos Tigo", "categoria": "Recargas de celular", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084706, "nombre": "Paquete de datos Virgin Mobile", "categoria": "Recargas de celular", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": "1780787084707", "nombre": "Certificado de tradición y libertad", "categoria": "Certificados y documentos", "precioCompra": 24300, "precioVenta": 29300, "cantidad": 10, "stockMin": 1, "estado": "activo"}, {"id": 1780787084708, "nombre": "Certificado de antecedentes judiciales", "categoria": "Certificados y documentos", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084709, "nombre": "Certificado de antecedentes disciplinarios", "categoria": "Certificados y documentos", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084710, "nombre": "Certificado de antecedentes fiscales (Contraloría)", "categoria": "Certificados y documentos", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084711, "nombre": "Certificado de EPS (afiliación / vigencia)", "categoria": "Certificados y documentos", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084712, "nombre": "Certificado Colpensiones (historia laboral)", "categoria": "Certificados y documentos", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084716, "nombre": "Certificado SISBÉN", "categoria": "Certificados y documentos", "precioCompra": 0, "precioVenta": 2000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084719, "nombre": "Diploma o acta de grado (solicitud y descarga)", "categoria": "Certificados y documentos", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084720, "nombre": "SOAT", "categoria": "Trámites y gestiones", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084721, "nombre": "Consulta de multas y comparendos", "categoria": "Trámites y gestiones", "precioCompra": 0, "precioVenta": 2000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084722, "nombre": "Agendamiento cita Registraduría", "categoria": "Trámites y gestiones", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084723, "nombre": "Agendamiento cita Tránsito / Gobernación", "categoria": "Trámites y gestiones", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084724, "nombre": "Apostilla de documentos", "categoria": "Trámites y gestiones", "precioCompra": 0, "precioVenta": 8000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084725, "nombre": "Trámites Cancillería (pasaporte, visa)", "categoria": "Trámites y gestiones", "precioCompra": 0, "precioVenta": 8000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084726, "nombre": "Formularios DIAN (RUT, declaraciones)", "categoria": "Trámites y gestiones", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084727, "nombre": "Consulta y actualización SISBÉN", "categoria": "Trámites y gestiones", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084728, "nombre": "Pago de impuestos (predial, vehículos)", "categoria": "Trámites y gestiones", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084729, "nombre": "Trámites de tránsito (licencias, multas)", "categoria": "Trámites y gestiones", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084730, "nombre": "Solicitud duplicado de documentos (cédula, licencia)", "categoria": "Trámites y gestiones", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084731, "nombre": "Radicación derechos de petición", "categoria": "Trámites y gestiones", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084732, "nombre": "Pago servicios públicos (agua, energía, gas)", "categoria": "Pagos y recaudos", "precioCompra": 0, "precioVenta": 2000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084733, "nombre": "Pago internet y TV cable", "categoria": "Pagos y recaudos", "precioCompra": 0, "precioVenta": 2000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084734, "nombre": "Pago factura de celular", "categoria": "Pagos y recaudos", "precioCompra": 0, "precioVenta": 2000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084735, "nombre": "Envío de giros y transferencias", "categoria": "Pagos y recaudos", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084736, "nombre": "Recarga tarjeta transporte (MIO, Transmilenio)", "categoria": "Pagos y recaudos", "precioCompra": 0, "precioVenta": 1000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084737, "nombre": "Venta de minutos a celular", "categoria": "Otros servicios", "precioCompra": 0, "precioVenta": 200, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780787084739, "nombre": "Fotos tipo documento (impresión)", "categoria": "Otros servicios", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": "1780854981395.8284", "nombre": "Pincel de Madera # 7-8", "categoria": "", "precioCompra": 500, "precioVenta": 1100, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780855041418.709", "nombre": "Pincel de Madera del Economico # 9-10", "categoria": "", "precioCompra": 650, "precioVenta": 1500, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780855074722.685", "nombre": "Pincel de madera Economico # 11", "categoria": "", "precioCompra": 1000, "precioVenta": 1800, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": "1780855106164.402", "nombre": "Pincel de madera del economico  #12", "categoria": "", "precioCompra": 1200, "precioVenta": 2300, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780861953637.3809, "nombre": "Marcador Permanente Zeppelin Negro", "categoria": "Utiles escolares", "precioCompra": 1100, "precioVenta": 2200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780861977853.5837, "nombre": "Marcador Permanente Zeppelin Azul", "categoria": "Utiles escolares", "precioCompra": 1100, "precioVenta": 2200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": "1780862823333.299", "nombre": "Marcador Borrable Pelikan Negro", "categoria": "Utiles escolares", "precioCompra": 1650, "precioVenta": 3200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780862852605.9336, "nombre": "Marcador Borrable Pelikan Azul", "categoria": "Utiles escolares", "precioCompra": 1650, "precioVenta": 3200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780862892485.05, "nombre": "Marcador Borrable Pelikan Verde", "categoria": "Utiles escolares", "precioCompra": 1650, "precioVenta": 3200, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780862961317.88, "nombre": "Resaltador Zeppelin Rosado", "categoria": "Utiles escolares", "precioCompra": 1150, "precioVenta": 3200, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780863023901.0063, "nombre": "Resaltador Zeppelin Verde", "categoria": "Utiles escolares", "precioCompra": 1150, "precioVenta": 3200, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780863042237.0386, "nombre": "Resaltador Zeppelin Naranja", "categoria": "Utiles escolares", "precioCompra": 1150, "precioVenta": 3200, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780863181333.0427, "nombre": "Vinilo Rapid Azul 42gr", "categoria": "Utiles escolares", "precioCompra": 770, "precioVenta": 2000, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780863200142.2253, "nombre": "Vinilo Rapid Blanco 42gr", "categoria": "Utiles escolares", "precioCompra": 770, "precioVenta": 2000, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780863216661.9006, "nombre": "Vinilo Rapid Amarillo 42gr", "categoria": "Utiles escolares", "precioCompra": 770, "precioVenta": 2000, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780863230293.8328, "nombre": "Vinilo Rapid Negro 42gr", "categoria": "Utiles escolares", "precioCompra": 770, "precioVenta": 2000, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780863246493.4849, "nombre": "Vinilo Rapid Rojo 42gr", "categoria": "Utiles escolares", "precioCompra": 770, "precioVenta": 2000, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780863338037.5205, "nombre": "Regla Geniosito Verde 30cm", "categoria": "Utiles escolares", "precioCompra": 550, "precioVenta": 1500, "cantidad": 2, "stockMin": 5, "estado": "activo"}, {"id": 1780863359357.7932, "nombre": "Regla Geniosito Azul 30cm", "categoria": "Utiles escolares", "precioCompra": 550, "precioVenta": 1500, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780864432702.726, "nombre": "Cuaderno ARGOLLADO Pequeño 100h /Linea/", "categoria": "Utiles escolares", "precioCompra": 2850, "precioVenta": 4000, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780864478430.962, "nombre": "Cuaderno ARGOLLADO  Grander 100h /Cuadriculado/", "categoria": "Escritura", "precioCompra": 3850, "precioVenta": 5300, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780864569278.8035, "nombre": "Bisturi Economico Pequeno AZUL", "categoria": "Manualidades", "precioCompra": 350, "precioVenta": 1000, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780864651862.5525, "nombre": "Bisturi Economico Pequeño VERDE", "categoria": "Manualidades", "precioCompra": 350, "precioVenta": 1000, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780864703590.1414, "nombre": "Bisturi Economico Pequeno AMARILLO", "categoria": "Útiles escolares", "precioCompra": 350, "precioVenta": 1000, "cantidad": 1, "stockMin": 5, "estado": "activo"}, {"id": 1780868394989, "nombre": "Impresión en papel especial (opalina, cartulina)", "categoria": "Impresiones y copias", "precioCompra": 0, "precioVenta": 1200, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868394990, "nombre": "Impresión tamaño especial (A3, pliego)", "categoria": "Impresiones y copias", "precioCompra": 0, "precioVenta": 2500, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868394997, "nombre": "Quemado de CD o USB", "categoria": "Digitalización y edición", "precioCompra": 0, "precioVenta": 2000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868394999, "nombre": "Laminado tamaño carta", "categoria": "Acabados", "precioCompra": 0, "precioVenta": 2000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395000, "nombre": "Laminado tamaño oficio", "categoria": "Acabados", "precioCompra": 0, "precioVenta": 2500, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395004, "nombre": "Empastado", "categoria": "Acabados", "precioCompra": 0, "precioVenta": 8000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395005, "nombre": "Encuadernación", "categoria": "Acabados", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395006, "nombre": "Corte de papel", "categoria": "Acabados", "precioCompra": 0, "precioVenta": 1000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395009, "nombre": "Carátula personalizada", "categoria": "Trabajos escolares", "precioCompra": 0, "precioVenta": 2000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395014, "nombre": "Recarga Virgin Mobile", "categoria": "Recargas de celular", "precioCompra": 0, "precioVenta": 1000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395025, "nombre": "Certificado de Cámara de Comercio", "categoria": "Certificados y documentos", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395026, "nombre": "Certificado de estratificación", "categoria": "Certificados y documentos", "precioCompra": 0, "precioVenta": 2000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395027, "nombre": "Certificado de residencia", "categoria": "Certificados y documentos", "precioCompra": 0, "precioVenta": 2000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395029, "nombre": "Certificado de registro civil", "categoria": "Certificados y documentos", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395030, "nombre": "Certificado de defunción", "categoria": "Certificados y documentos", "precioCompra": 0, "precioVenta": 3000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395050, "nombre": "Uso de computador (por hora)", "categoria": "Otros servicios", "precioCompra": 0, "precioVenta": 2000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}, {"id": 1780868395052, "nombre": "Asesoría básica en trámites virtuales", "categoria": "Otros servicios", "precioCompra": 0, "precioVenta": 5000, "cantidad": 1, "stockMin": 0, "estado": "activo", "esServicio": true}];
+const DATOS_GUARDADOS_SERVICIOS = [{"nombre": "Fotocopia blanco y negro", "categoria": "Impresiones y copias", "precio": 200, "costo": 50, "estado": "activo", "id": 1780687077785}, {"nombre": "Fotocopia a color", "categoria": "Impresiones y copias", "precio": 500, "costo": 150, "estado": "activo", "id": 1780687077786}, {"nombre": "Impresión blanco y negro", "categoria": "Impresiones y copias", "precio": 300, "costo": 80, "estado": "activo", "id": 1780687077787}, {"nombre": "Impresión a color", "categoria": "Impresiones y copias", "precio": 700, "costo": 200, "estado": "activo", "id": 1780687077788}, {"nombre": "Impresión fotográfica", "categoria": "Impresiones y copias", "precio": 1500, "costo": 500, "estado": "activo", "id": 1780687077789}, {"nombre": "Impresión en papel especial (opalina, cartulina)", "categoria": "Impresiones y copias", "precio": 1200, "costo": 400, "estado": "activo", "id": 1780687077790}, {"nombre": "Impresión tamaño especial (A3, pliego)", "categoria": "Impresiones y copias", "precio": 2500, "costo": 800, "estado": "activo", "id": 1780687077791}, {"nombre": "Escaneo de documento", "categoria": "Digitalización y edición", "precio": 500, "costo": 0, "estado": "activo", "id": 1780687077792}, {"nombre": "Edición de documento (Word, PDF)", "categoria": "Digitalización y edición", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077793}, {"nombre": "Edición de presentación (PowerPoint)", "categoria": "Digitalización y edición", "precio": 5000, "costo": 0, "estado": "activo", "id": 1780687077794}, {"nombre": "Transcripción de documento", "categoria": "Digitalización y edición", "precio": 4000, "costo": 0, "estado": "activo", "id": 1780687077795}, {"nombre": "Diseño básico (volante, tarjeta, afiche)", "categoria": "Digitalización y edición", "precio": 8000, "costo": 0, "estado": "activo", "id": 1780687077796}, {"nombre": "Conversión de archivos (PDF a Word, etc.)", "categoria": "Digitalización y edición", "precio": 1000, "costo": 0, "estado": "activo", "id": 1780687077797}, {"nombre": "Quemado de CD o USB", "categoria": "Digitalización y edición", "precio": 2000, "costo": 0, "estado": "activo", "id": 1780687077798}, {"nombre": "Carga de archivos desde celular o USB", "categoria": "Digitalización y edición", "precio": 500, "costo": 0, "estado": "activo", "id": 1780687077799}, {"nombre": "Laminado tamaño carta", "categoria": "Acabados", "precio": 2000, "costo": 600, "estado": "activo", "id": 1780687077800}, {"nombre": "Laminado tamaño oficio", "categoria": "Acabados", "precio": 2500, "costo": 800, "estado": "activo", "id": 1780687077801}, {"nombre": "Plastificado de carné", "categoria": "Acabados", "precio": 1500, "costo": 400, "estado": "activo", "id": 1780687077802}, {"nombre": "Anillado", "categoria": "Acabados", "precio": 3000, "costo": 1000, "estado": "activo", "id": 1780687077803}, {"nombre": "Argollado", "categoria": "Acabados", "precio": 4000, "costo": 1200, "estado": "activo", "id": 1780687077804}, {"nombre": "Empastado", "categoria": "Acabados", "precio": 8000, "costo": 2500, "estado": "activo", "id": 1780687077805}, {"nombre": "Encuadernación", "categoria": "Acabados", "precio": 5000, "costo": 1500, "estado": "activo", "id": 1780687077806}, {"nombre": "Corte de papel", "categoria": "Acabados", "precio": 1000, "costo": 0, "estado": "activo", "id": 1780687077807}, {"nombre": "Trabajo escolar completo (impresión + argollado)", "categoria": "Trabajos escolares", "precio": 15000, "costo": 4000, "estado": "activo", "id": 1780687077808}, {"nombre": "Impresión y armado de trabajo", "categoria": "Trabajos escolares", "precio": 8000, "costo": 2000, "estado": "activo", "id": 1780687077809}, {"nombre": "Carátula personalizada", "categoria": "Trabajos escolares", "precio": 2000, "costo": 500, "estado": "activo", "id": 1780687077810}, {"nombre": "Presentación en diapositivas (diseño e impresión)", "categoria": "Trabajos escolares", "precio": 12000, "costo": 3000, "estado": "activo", "id": 1780687077811}, {"nombre": "Recarga Claro", "categoria": "Recargas de celular", "precio": 1000, "costo": 900, "estado": "activo", "id": 1780687077812}, {"nombre": "Recarga Movistar", "categoria": "Recargas de celular", "precio": 1000, "costo": 900, "estado": "activo", "id": 1780687077813}, {"nombre": "Recarga Tigo", "categoria": "Recargas de celular", "precio": 1000, "costo": 900, "estado": "activo", "id": 1780687077814}, {"nombre": "Recarga Virgin Mobile", "categoria": "Recargas de celular", "precio": 1000, "costo": 900, "estado": "activo", "id": 1780687077815}, {"nombre": "Paquete de datos Claro", "categoria": "Recargas de celular", "precio": 5000, "costo": 4500, "estado": "activo", "id": 1780687077816}, {"nombre": "Paquete de datos Movistar", "categoria": "Recargas de celular", "precio": 5000, "costo": 4500, "estado": "activo", "id": 1780687077817}, {"nombre": "Paquete de datos Tigo", "categoria": "Recargas de celular", "precio": 5000, "costo": 4500, "estado": "activo", "id": 1780687077818}, {"nombre": "Paquete de datos Virgin Mobile", "categoria": "Recargas de celular", "precio": 5000, "costo": 4500, "estado": "activo", "id": 1780687077819}, {"nombre": "Certificado de tradición y libertad", "categoria": "Certificados y documentos", "precio": 5000, "costo": 0, "estado": "activo", "id": 1780687077820}, {"nombre": "Certificado de antecedentes judiciales", "categoria": "Certificados y documentos", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077821}, {"nombre": "Certificado de antecedentes disciplinarios", "categoria": "Certificados y documentos", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077822}, {"nombre": "Certificado de antecedentes fiscales (Contraloría)", "categoria": "Certificados y documentos", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077823}, {"nombre": "Certificado de EPS (afiliación / vigencia)", "categoria": "Certificados y documentos", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077824}, {"nombre": "Certificado Colpensiones (historia laboral)", "categoria": "Certificados y documentos", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077825}, {"nombre": "Certificado de Cámara de Comercio", "categoria": "Certificados y documentos", "precio": 5000, "costo": 0, "estado": "activo", "id": 1780687077826}, {"nombre": "Certificado de estratificación", "categoria": "Certificados y documentos", "precio": 2000, "costo": 0, "estado": "activo", "id": 1780687077827}, {"nombre": "Certificado de residencia", "categoria": "Certificados y documentos", "precio": 2000, "costo": 0, "estado": "activo", "id": 1780687077828}, {"nombre": "Certificado SISBÉN", "categoria": "Certificados y documentos", "precio": 2000, "costo": 0, "estado": "activo", "id": 1780687077829}, {"nombre": "Certificado de registro civil", "categoria": "Certificados y documentos", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077830}, {"nombre": "Certificado de defunción", "categoria": "Certificados y documentos", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077831}, {"nombre": "Diploma o acta de grado (solicitud y descarga)", "categoria": "Certificados y documentos", "precio": 5000, "costo": 0, "estado": "activo", "id": 1780687077832}, {"nombre": "SOAT", "categoria": "Trámites y gestiones", "precio": 5000, "costo": 0, "estado": "activo", "id": 1780687077833}, {"nombre": "Consulta de multas y comparendos", "categoria": "Trámites y gestiones", "precio": 2000, "costo": 0, "estado": "activo", "id": 1780687077834}, {"nombre": "Agendamiento cita Registraduría", "categoria": "Trámites y gestiones", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077835}, {"nombre": "Agendamiento cita Tránsito / Gobernación", "categoria": "Trámites y gestiones", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077836}, {"nombre": "Apostilla de documentos", "categoria": "Trámites y gestiones", "precio": 8000, "costo": 0, "estado": "activo", "id": 1780687077837}, {"nombre": "Trámites Cancillería (pasaporte, visa)", "categoria": "Trámites y gestiones", "precio": 8000, "costo": 0, "estado": "activo", "id": 1780687077838}, {"nombre": "Formularios DIAN (RUT, declaraciones)", "categoria": "Trámites y gestiones", "precio": 5000, "costo": 0, "estado": "activo", "id": 1780687077839}, {"nombre": "Consulta y actualización SISBÉN", "categoria": "Trámites y gestiones", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077840}, {"nombre": "Pago de impuestos (predial, vehículos)", "categoria": "Trámites y gestiones", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077841}, {"nombre": "Trámites de tránsito (licencias, multas)", "categoria": "Trámites y gestiones", "precio": 5000, "costo": 0, "estado": "activo", "id": 1780687077842}, {"nombre": "Solicitud duplicado de documentos (cédula, licencia)", "categoria": "Trámites y gestiones", "precio": 5000, "costo": 0, "estado": "activo", "id": 1780687077843}, {"nombre": "Radicación derechos de petición", "categoria": "Trámites y gestiones", "precio": 5000, "costo": 0, "estado": "activo", "id": 1780687077844}, {"nombre": "Pago servicios públicos (agua, energía, gas)", "categoria": "Pagos y recaudos", "precio": 2000, "costo": 0, "estado": "activo", "id": 1780687077845}, {"nombre": "Pago internet y TV cable", "categoria": "Pagos y recaudos", "precio": 2000, "costo": 0, "estado": "activo", "id": 1780687077846}, {"nombre": "Pago factura de celular", "categoria": "Pagos y recaudos", "precio": 2000, "costo": 0, "estado": "activo", "id": 1780687077847}, {"nombre": "Envío de giros y transferencias", "categoria": "Pagos y recaudos", "precio": 3000, "costo": 0, "estado": "activo", "id": 1780687077848}, {"nombre": "Recarga tarjeta transporte (MIO, Transmilenio)", "categoria": "Pagos y recaudos", "precio": 1000, "costo": 0, "estado": "activo", "id": 1780687077849}, {"nombre": "Venta de minutos a celular", "categoria": "Otros servicios", "precio": 200, "costo": 150, "estado": "activo", "id": 1780687077850}, {"nombre": "Uso de computador (por hora)", "categoria": "Otros servicios", "precio": 2000, "costo": 0, "estado": "activo", "id": 1780687077851}, {"nombre": "Fotos tipo documento (impresión)", "categoria": "Otros servicios", "precio": 5000, "costo": 1500, "estado": "activo", "id": 1780687077852}, {"nombre": "Asesoría básica en trámites virtuales", "categoria": "Otros servicios", "precio": 5000, "costo": 0, "estado": "activo", "id": 1780687077853}];
+
+function init() {
+  // Si no hay datos en localStorage, cargar desde el backup guardado
+  if (!localStorage.getItem('servicios')) {
+    DB.set('servicios', DATOS_GUARDADOS_SERVICIOS);
+  }
+  if (!localStorage.getItem('productos')) {
+    DB.set('productos', DATOS_GUARDADOS_PRODUCTOS);
+  }
+  const hoy = new Date();
+  document.getElementById('fecha-hoy').textContent = hoy.toLocaleDateString('es-CO', {weekday:'long', year:'numeric', month:'long', day:'numeric'});
+  const fechaStr = hoy.toISOString().split('T')[0];
+  ['compra-fecha','gasto-fecha'].forEach(id => { const el = document.getElementById(id); if(el) el.value = fechaStr; });
+  renderDashboard();
+  poblarFiltrosCategorias();
+}
+
+// ===== NAVEGACIÓN =====
+function navigate(page) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('page-' + page).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(n => { if(n.getAttribute('onclick')?.includes(page)) n.classList.add('active'); });
+  // Render dinámico
+  if(page === 'dashboard') renderDashboard();
+  if(page === 'inventario') { renderInventario(); setTimeout(()=>setFiltroInv(invFiltroTipo),50); }
+  if(page === 'ventas') { limpiarVenta(); renderAccesosRapidos(); }
+  if(page === 'servicios-reg') renderServiciosReg();
+  if(page === 'hist-ventas') renderHistVentas();
+  if(page === 'hist-compras') renderHistCompras();
+  if(page === 'hist-gastos') renderHistGastos();
+  if(page === 'reportes') renderReportes();
+  if(page === 'comprar') renderQueComprar();
+  if(page === 'servicios-cat') renderCatalogoServicios();
+  if(page === 'compras') limpiarCompra();
+  if(page === 'gastos') limpiarGasto();
+}
+
+// ===== HELPERS =====
+const $ = id => document.getElementById(id);
+const fmt = n => '$' + (Number(n)||0).toLocaleString('es-CO');
+const fmtNum = n => (Number(n)||0).toLocaleString('es-CO');
+const uid = () => Date.now() + Math.random();
+const today = () => new Date().toISOString().split('T')[0];
+const timeNow = () => new Date().toLocaleTimeString('es-CO', {hour:'2-digit', minute:'2-digit'});
+
+function toast(msg, type='success') {
+  const t = $('toast');
+  t.textContent = (type==='success'?'✅ ':type==='error'?'❌ ':'⚠️ ') + msg;
+  t.style.borderColor = type==='success'?'var(--success)':type==='error'?'var(--danger)':'var(--accent)';
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function poblarFiltrosCategorias() {
+  const productos = DB.get('productos');
+  const servicios = DB.get('servicios');
+  const catsProd = [...new Set(productos.map(p => p.categoria).filter(Boolean))];
+  const catsSrv = [...new Set(servicios.map(s => s.categoria).filter(Boolean))];
+
+  // Inventario
+  // Filtro de inventario usa botones, no select — no hay que poblar
+  // Servicios reg
+  const sel2 = $('srv-cat-reg');
+  if(sel2) { sel2.innerHTML = '<option value="">Todas las categorias</option>' + catsSrv.map(c=>`<option>${c}</option>`).join(''); }
+  // Catálogo servicios
+  const sel3 = $('cat-filtro-cat');
+  if(sel3) { sel3.innerHTML = '<option value="">Todas las categorias</option>' + catsSrv.map(c=>`<option>${c}</option>`).join(''); }
+  // Datalists
+  const dl2 = $('srv-cat-list');
+  if(dl2) dl2.innerHTML = catsSrv.map(c=>`<option value="${c}">`).join('');
+}
+
+// ===== DASHBOARD =====
+function renderDashboard() {
+  const ventas = DB.get('ventas');
+  const serviciosReg = DB.get('servicios_reg');
+  const gastos = DB.get('gastos');
+  const productos = DB.get('productos');
+  const hoy = today();
+  const mesActual = hoy.slice(0,7);
+
+  const ventasHoy = ventas.filter(v => v.fecha === hoy);
+  const ventasMes = ventas.filter(v => v.fecha.startsWith(mesActual));
+  const srvHoy = serviciosReg.filter(s => s.fecha === hoy);
+  const srvMes = serviciosReg.filter(s => s.fecha.startsWith(mesActual));
+
+  const totalVentasHoy = ventasHoy.reduce((a,v) => a + v.total, 0);
+  const totalVentasMes = ventasMes.reduce((a,v) => a + v.total, 0);
+  const totalSrvHoy = srvHoy.reduce((a,s) => a + s.valor, 0);
+  const totalSrvMes = srvMes.reduce((a,s) => a + s.valor, 0);
+  const ganHoy = ventasHoy.reduce((a,v) => a + v.ganancia, 0) + srvHoy.reduce((a,s) => a + s.ganancia, 0);
+  const ganMes = ventasMes.reduce((a,v) => a + v.ganancia, 0) + srvMes.reduce((a,s) => a + s.ganancia, 0);
+  const gastosHoy = gastos.filter(g => g.fecha === hoy).reduce((a,g) => a + g.valor, 0);
+  const gastosMes = gastos.filter(g => g.fecha.startsWith(mesActual)).reduce((a,g) => a + g.valor, 0);
+
+  $('dash-cards').innerHTML = `
+    <div class="card"><div class="card-label">Ventas + Servicios hoy</div><div class="card-value accent">${fmt(totalVentasHoy + totalSrvHoy)}</div><div class="card-sub">Ventas: ${fmt(totalVentasHoy)} | Servicios: ${fmt(totalSrvHoy)}</div></div>
+    <div class="card"><div class="card-label">Ventas + Servicios este mes</div><div class="card-value accent">${fmt(totalVentasMes + totalSrvMes)}</div><div class="card-sub">Ventas: ${fmt(totalVentasMes)} | Servicios: ${fmt(totalSrvMes)}</div></div>
+    <div class="card"><div class="card-label">Ganancia estimada hoy</div><div class="card-value success">${fmt(ganHoy - gastosHoy)}</div><div class="card-sub">Bruta: ${fmt(ganHoy)} | Gastos: ${fmt(gastosHoy)}</div></div>
+    <div class="card"><div class="card-label">Ganancia estimada este mes</div><div class="card-value success">${fmt(ganMes - gastosMes)}</div><div class="card-sub">Bruta: ${fmt(ganMes)} | Gastos: ${fmt(gastosMes)}</div></div>
+  `;
+
+  // Últimas ventas
+  const ultV = [...ventas].reverse().slice(0,5);
+  $('dash-ventas').innerHTML = ultV.length ? ultV.map(v => `<tr><td>${v.producto}</td><td>${v.cantidad}</td><td>${fmt(v.total)}</td><td class="text-muted">${v.hora}</td></tr>`).join('') : '<tr><td colspan="4" class="text-muted" style="padding:20px;text-align:center">Sin ventas aún</td></tr>';
+
+  // Últimos servicios
+  const ultS = [...serviciosReg].reverse().slice(0,5);
+  $('dash-servicios').innerHTML = ultS.length ? ultS.map(s => `<tr><td>${s.servicio}</td><td>${fmt(s.valor)}</td><td class="text-muted">${s.hora}</td></tr>`).join('') : '<tr><td colspan="3" class="text-muted" style="padding:20px;text-align:center">Sin servicios aún</td></tr>';
+
+  // Solo productos relevantes: que han sido vendidos alguna vez o tienen stock > 0
+  const todasVentas = DB.get('ventas');
+  const algunaVezVendido = todasVentas.reduce((acc, v) => { acc[v.producto] = true; return acc; }, {});
+  const productosRelevantes = productos.filter(p =>
+    p.estado === 'activo' && !p.esServicio && (p.cantidad > 0 || algunaVezVendido[p.nombre])
+  );
+
+  // Tabla de alertas en el dashboard (solo relevantes)
+  const alertas = productosRelevantes.filter(p => p.cantidad <= (p.stockMin || 0));
+  $('dash-alertas-inv').innerHTML = alertas.length ? alertas.map(p => `
+    <tr><td>${p.nombre}</td><td>${p.cantidad}</td><td>${p.stockMin || 0}</td>
+    <td>${p.cantidad === 0 ? '<span class="badge badge-danger">AGOTADO</span>' : '<span class="badge badge-warn">Stock bajo</span>'}</td></tr>
+  `).join('') : '<tr><td colspan="4" style="padding:20px;text-align:center;color:var(--success)">✅ Todo el inventario en buen nivel</td></tr>';
+
+  // Alertas flotantes — compactas, solo relevantes, con ver detalle
+  const agotados = productosRelevantes.filter(p => p.cantidad === 0);
+  const bajos = productosRelevantes.filter(p => p.cantidad > 0 && p.cantidad <= (p.stockMin || 0));
+  let alertsHtml = '';
+  if(agotados.length) {
+    const preview = agotados.slice(0,3).map(p=>p.nombre).join(', ');
+    const mas = agotados.length > 3 ? ` y ${agotados.length - 3} más` : '';
+    alertsHtml += `<div class="alert alert-danger" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px">
+      <span>⛔ <strong>${agotados.length} agotado(s):</strong> ${preview}${mas}</span>
+      <button class="btn btn-sm btn-danger" onclick="navigate('comprar')" style="margin-left:12px;white-space:nowrap">Ver lista</button>
+    </div>`;
+  }
+  if(bajos.length) {
+    const preview = bajos.slice(0,3).map(p=>p.nombre).join(', ');
+    const mas = bajos.length > 3 ? ` y ${bajos.length - 3} más` : '';
+    alertsHtml += `<div class="alert alert-warn" style="display:flex;align-items:center;justify-content:space-between;padding:10px 14px">
+      <span>⚠️ <strong>${bajos.length} stock bajo:</strong> ${preview}${mas}</span>
+      <button class="btn btn-sm btn-secondary" onclick="navigate('comprar')" style="margin-left:12px;white-space:nowrap">Ver lista</button>
+    </div>`;
+  }
+  $('alertas-container').innerHTML = alertsHtml;
+}
+
+// ===== INVENTARIO =====
+// ─── FILTRO INVENTARIO (botones Papelería / Servicios / Todo) ───────────────
+let invFiltroTipo = ''; // '' | 'papeleria' | 'servicios'
+
+function setFiltroInv(tipo) {
+  invFiltroTipo = tipo;
+  // Actualizar estado visual de botones
+  ['filtro-todos','filtro-papeleria','filtro-servicios'].forEach(id => {
+    const el = document.getElementById(id);
+    if(el) el.classList.remove('active');
+  });
+  const map = {'':'filtro-todos','papeleria':'filtro-papeleria','servicios':'filtro-servicios'};
+  const target = document.getElementById(map[tipo]);
+  if(target) target.classList.add('active');
+  renderInventario();
+}
+
+// ─── GUARDAR COPIA EN GOOGLE DRIVE ──────────────────────────────────────────
+// Estado de ordenamiento del inventario
+let invSortCol = 'nombre';
+let invSortDir = 'asc';
+
+function sortInventario(col) {
+  if(invSortCol === col) {
+    invSortDir = invSortDir === 'asc' ? 'desc' : 'asc';
+  } else {
+    invSortCol = col;
+    invSortDir = 'asc';
+  }
+  renderInventario();
+}
+
+function renderInventario() {
+  const q = $('inv-buscar')?.value.toLowerCase() || '';
+  const cat = $('inv-cat-filter')?.value || '';
+  let productos = DB.get('productos').filter(p => {
+    const nombreMatch = p.nombre.toLowerCase().includes(q);
+    let tipoMatch = true;
+    if(invFiltroTipo === 'papeleria') tipoMatch = !p.esServicio;
+    else if(invFiltroTipo === 'servicios') tipoMatch = p.esServicio === true;
+    return nombreMatch && tipoMatch;
+  });
+
+  // Ordenamiento
+  productos.sort((a, b) => {
+    let va, vb;
+    if(invSortCol === 'utilidad') {
+      va = (a.precioVenta||0) - (a.precioCompra||0);
+      vb = (b.precioVenta||0) - (b.precioCompra||0);
+    } else if(invSortCol === 'nombre') {
+      va = (a[invSortCol]||'').toLowerCase();
+      vb = (b[invSortCol]||'').toLowerCase();
+    } else {
+      va = Number(a[invSortCol])||0;
+      vb = Number(b[invSortCol])||0;
+    }
+    if(va < vb) return invSortDir === 'asc' ? -1 : 1;
+    if(va > vb) return invSortDir === 'asc' ? 1 : -1;
+    return 0;
+  });
+
+  // Actualizar íconos de ordenamiento
+  ['nombre','precioCompra','precioVenta','cantidad','utilidad'].forEach(col => {
+    const el = $('sort-icon-' + col);
+    if(el) el.textContent = col === invSortCol ? (invSortDir === 'asc' ? ' ▲' : ' ▼') : ' ⇅';
+  });
+
+  const tbody = $('tabla-inventario');
+  if(!productos.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">📦</div><p>No hay productos. Agrega tu primer producto.</p></div></td></tr>'; }
+  else {
+    tbody.innerHTML = productos.map(p => {
+      const esServ = p.esServicio === true;
+      const util = (p.precioVenta || 0) - (p.precioCompra || 0);
+      let estadoBadge, estadoTxt;
+      if(esServ) {
+        estadoBadge = 'badge-info';
+        estadoTxt = 'Servicio';
+      } else {
+        estadoBadge = p.cantidad === 0 ? 'badge-danger' : p.cantidad <= (p.stockMin||0) ? 'badge-warn' : 'badge-success';
+        estadoTxt = p.cantidad === 0 ? 'Agotado' : p.cantidad <= (p.stockMin||0) ? 'Stock bajo' : 'OK';
+      }
+      const stockCell = esServ
+        ? '<span style="color:var(--accent);font-size:0.8em">⚡ Servicio</span>'
+        : `<strong>${fmtNum(p.cantidad)}</strong>`;
+      return `<tr>
+        <td><strong>${p.nombre}</strong>${esServ ? ' <span class="badge badge-info" style="font-size:0.7em">⚡</span>' : ''}</td>
+        <td>${fmt(p.precioCompra)}</td>
+        <td>${fmt(p.precioVenta)}</td>
+        <td>${stockCell}</td>
+        <td style="color:var(--success)">${fmt(util)}</td>
+        <td><span class="badge ${estadoBadge}">${estadoTxt}</span></td>
+        <td>
+          <button class="btn btn-icon" title="Editar" onclick="editarProducto('${p.id}')">✏️</button>
+          <button class="btn btn-icon" title="Eliminar" onclick="eliminarProducto('${p.id}')" style="margin-left:4px">🗑️</button>
+        </td>
+      </tr>`;
+    }).join('');
+  }
+  // Resumen — excluir servicios del conteo de stock
+  const todos = DB.get('productos');
+  const soloProductos = todos.filter(p => !p.esServicio);
+  const valTotal = soloProductos.reduce((a,p) => a + (p.precioCompra||0)*(p.cantidad||0), 0);
+  const utilTotal = soloProductos.reduce((a,p) => a + ((p.precioVenta||0)-(p.precioCompra||0))*(p.cantidad||0), 0);
+  $('inv-resumen').innerHTML = `
+    <div class="card"><div class="card-label">Total productos</div><div class="card-value">${soloProductos.length}</div></div>
+    <div class="card"><div class="card-label">Total servicios</div><div class="card-value accent">${todos.filter(p=>p.esServicio).length}</div></div>
+    <div class="card"><div class="card-label">Valor inventario</div><div class="card-value accent">${fmt(valTotal)}</div></div>
+    <div class="card"><div class="card-label">Utilidad potencial</div><div class="card-value success">${fmt(utilTotal)}</div></div>
+    <div class="card"><div class="card-label">Productos agotados</div><div class="card-value danger">${soloProductos.filter(p=>p.cantidad===0 && (DB.get('ventas').some(v=>v.producto===p.nombre))).length}</div></div>
+  `;
+  poblarFiltrosCategorias();
+}
+
+function abrirModalProducto(id) {
+  $('prod-id').value = '';
+  $('prod-nombre').value = '';
+  $('prod-precio-compra').value = '';
+  $('prod-precio-venta').value = '';
+  $('prod-cantidad').value = '';
+  $('prod-stock-min').value = '5';
+  $('prod-estado').value = 'activo';
+  $('modal-prod-titulo').textContent = 'Nuevo producto';
+  $('modal-producto').classList.add('open');
+}
+
+function editarProducto(id) {
+  const p = DB.get('productos').find(x => String(x.id) === String(id));
+  if(!p) return;
+  $('prod-id').value = p.id;
+  $('prod-nombre').value = p.nombre;
+  $('prod-precio-compra').value = p.precioCompra||0;
+  $('prod-precio-venta').value = p.precioVenta||0;
+  $('prod-cantidad').value = p.cantidad||0;
+  $('prod-stock-min').value = p.stockMin||5;
+  $('prod-estado').value = p.estado||'activo';
+  $('modal-prod-titulo').textContent = 'Editar producto';
+  $('modal-producto').classList.add('open');
+}
+
+function guardarProducto() {
+  const nombre = $('prod-nombre').value.trim();
+  if(!nombre) { toast('El nombre es obligatorio', 'error'); return; }
+  const productos = DB.get('productos');
+  const id = $('prod-id').value;
+  const categoriasServicio = ["Impresiones y copias", "Digitalizaci\u00f3n y edici\u00f3n", "Acabados", "Trabajos escolares", "Recargas de celular", "Certificados y documentos", "Tr\u00e1mites y gestiones", "Pagos y recaudos", "Otros servicios"];
+  const catVal = '';
+  const esServicioNuevo = categoriasServicio.includes(catVal);
+  const prod = {
+    id: id || uid(),
+    nombre,
+    categoria: catVal,
+    precioCompra: Number($('prod-precio-compra').value)||0,
+    precioVenta: Number($('prod-precio-venta').value)||0,
+    cantidad: esServicioNuevo ? 1 : (Number($('prod-cantidad').value)||0),
+    stockMin: esServicioNuevo ? 0 : (Number($('prod-stock-min').value)||5),
+    estado: $('prod-estado').value,
+    ...(esServicioNuevo ? {esServicio: true} : {})
+  };
+  if(id) { 
+    const i = productos.findIndex(p => String(p.id) === String(id)); 
+    if(i>=0) { 
+      // Preserve esServicio from original if not overridden by category detection
+      if(!esServicioNuevo && productos[i].esServicio) prod.esServicio = true;
+      productos[i] = prod; 
+    } 
+  }
+  else productos.push(prod);
+  DB.set('productos', productos);
+  cerrarModal('modal-producto');
+  renderInventario();
+  toast(id ? 'Producto actualizado' : 'Producto creado');
+}
+
+function eliminarProducto(id) {
+  if(!confirm('¿Eliminar este producto?')) return;
+  DB.set('productos', DB.get('productos').filter(p => String(p.id) !== String(id)));
+  renderInventario();
+  toast('Producto eliminado', 'warn');
+}
+
+// ===== VENTAS =====
+let productoSeleccionado = null;
+
+function buscarProductoVenta() {
+  const q = $('venta-buscar').value.toLowerCase();
+  if(q.length < 2) { $('venta-resultados').innerHTML = ''; $('venta-form').style.display='none'; productoSeleccionado=null; return; }
+  const res = DB.get('productos').filter(p => p.estado==='activo' && p.nombre.toLowerCase().includes(q));
+  if(!res.length) { $('venta-resultados').innerHTML = '<p class="text-muted" style="padding:8px">No se encontraron productos</p>'; return; }
+  $('venta-resultados').innerHTML = res.map(p => `
+    <div onclick="seleccionarProductoVenta('${p.id}')" style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;margin-bottom:6px;transition:border 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <strong>${p.nombre}</strong> <span class="tag">${p.categoria}</span>${p.esServicio ? ' <span class="badge badge-info">Servicio</span>' : ''}<br>
+      <span class="text-muted">${p.esServicio ? 'Servicio' : 'Stock: ' + p.cantidad} | Precio: ${fmt(p.precioVenta)}</span>
+    </div>
+  `).join('');
+}
+
+function seleccionarProductoVenta(id) {
+  productoSeleccionado = DB.get('productos').find(p => String(p.id) === String(id));
+  if(!productoSeleccionado) return;
+  $('venta-buscar').value = productoSeleccionado.nombre;
+  $('venta-resultados').innerHTML = '';
+  $('venta-cantidad').value = 1;
+  $('venta-form').style.display = 'block';
+  const esServicio = productoSeleccionado.esServicio === true;
+  if(esServicio){
+    $('venta-producto-info').innerHTML = `
+      <div class="alert alert-success" style="margin:0">
+        <div><strong>${productoSeleccionado.nombre}</strong> <span class="badge badge-info">Servicio</span><br>
+        <label style="display:block;margin-top:8px;font-size:12px;color:var(--muted)">PRECIO DEL SERVICIO (editable)</label>
+        <input type="number" id="venta-precio-servicio" value="${productoSeleccionado.precioVenta}" min="0" style="margin-top:4px;max-width:200px" oninput="actualizarPrecioServicio()">
+        </div>
+      </div>`;
+  } else {
+    $('venta-producto-info').innerHTML = `
+      <div class="alert alert-success" style="margin:0">
+        <div><strong>${productoSeleccionado.nombre}</strong><br>
+        Precio venta: ${fmt(productoSeleccionado.precioVenta)} | Stock disponible: <strong>${productoSeleccionado.cantidad}</strong></div>
+      </div>`;
+  }
+  calcularVenta();
+}
+
+function actualizarPrecioServicio(){
+  if(!productoSeleccionado) return;
+  const nuevo = Number($('venta-precio-servicio').value)||0;
+  productoSeleccionado.precioVenta = nuevo;
+  // Si quiere, persistir el nuevo precio del servicio en el inventario
+  const productos = DB.get('productos');
+  const i = productos.findIndex(p => String(p.id) === String(productoSeleccionado.id));
+  if(i >= 0){ productos[i].precioVenta = nuevo; DB.set('productos', productos); }
+  calcularVenta();
+}
+
+function calcularVenta() {
+  if(!productoSeleccionado) return;
+  const cant = Number($('venta-cantidad').value)||1;
+  const total = cant * productoSeleccionado.precioVenta;
+  const gan = cant * ((productoSeleccionado.precioVenta||0) - (productoSeleccionado.precioCompra||0));
+  $('venta-calculo').innerHTML = `
+    <div class="two-col">
+      <div class="card" style="padding:14px"><div class="card-label">Total a cobrar</div><div class="card-value accent" style="font-size:22px">${fmt(total)}</div></div>
+      <div class="card" style="padding:14px"><div class="card-label">Ganancia</div><div class="card-value success" style="font-size:22px">${fmt(gan)}</div></div>
+    </div>`;
+}
+
+function registrarVenta() {
+  if(!productoSeleccionado) { toast('Selecciona un producto', 'error'); return; }
+  const cant = Number($('venta-cantidad').value)||1;
+  if(cant <= 0) { toast('Cantidad inválida', 'error'); return; }
+  const esServicio = productoSeleccionado.esServicio === true;
+  if(!esServicio && cant > productoSeleccionado.cantidad) { toast('Stock insuficiente', 'error'); return; }
+  const total = cant * productoSeleccionado.precioVenta;
+  const gan = cant * ((productoSeleccionado.precioVenta||0) - (productoSeleccionado.precioCompra||0));
+  // Guardar venta
+  const ventas = DB.get('ventas');
+  ventas.push({ id: uid(), fecha: today(), hora: timeNow(), producto: productoSeleccionado.nombre, productoId: productoSeleccionado.id, cantidad: cant, precioUnitario: productoSeleccionado.precioVenta, total, ganancia: gan, tipo: (productoSeleccionado.esServicio ? 'Servicio' : 'Producto') });
+  DB.set('ventas', ventas);
+  // Actualizar stock SOLO si es producto (los servicios no descuentan stock)
+  if(!esServicio){
+    const productos = DB.get('productos');
+    const i = productos.findIndex(p => String(p.id) === String(productoSeleccionado.id));
+    if(i >= 0) productos[i].cantidad -= cant;
+    DB.set('productos', productos);
+  }
+  toast((esServicio ? 'Servicio registrado: ' : 'Venta registrada: ') + fmt(total));
+  limpiarVenta();
+  renderAccesosRapidos();
+}
+
+function limpiarVenta() {
+  $('venta-buscar').value = '';
+  $('venta-resultados').innerHTML = '';
+  $('venta-form').style.display = 'none';
+  $('venta-calculo').innerHTML = '';
+  productoSeleccionado = null;
+}
+
+// ===== COMPRAS =====
+let productoCompraSelected = null;
+
+function buscarProductoCompra() {
+  const q = $('compra-prod-buscar').value.toLowerCase();
+  if(q.length < 2) { $('compra-resultados').innerHTML = ''; return; }
+  const res = DB.get('productos').filter(p => p.nombre.toLowerCase().includes(q));
+  $('compra-resultados').innerHTML = res.map(p => `
+    <div onclick="seleccionarProductoCompra('${p.id}')" style="padding:10px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:8px;cursor:pointer;margin-bottom:6px;transition:border 0.15s;" onmouseover="this.style.borderColor='var(--accent)'" onmouseout="this.style.borderColor='var(--border)'">
+      <strong>${p.nombre}</strong><br><span class="text-muted">Stock actual: ${p.cantidad}</span>
+    </div>
+  `).join('') || '<p class="text-muted" style="padding:8px">Sin resultados</p>';
+}
+
+function seleccionarProductoCompra(id) {
+  productoCompraSelected = DB.get('productos').find(p => String(p.id) === String(id));
+  $('compra-prod-buscar').value = productoCompraSelected.nombre;
+  $('compra-resultados').innerHTML = '';
+  $('compra-precio').value = productoCompraSelected.precioCompra || '';
+  $('compra-cantidad-group').style.display = 'block';
+  $('compra-precio-group').style.display = 'block';
+  $('compra-selected-info').innerHTML = `<div class="alert alert-success" style="margin:0">Producto seleccionado: <strong>${productoCompraSelected.nombre}</strong> | Stock actual: ${productoCompraSelected.cantidad}</div>`;
+}
+
+function registrarCompra() {
+  if(!productoCompraSelected) { toast('Selecciona un producto', 'error'); return; }
+  const cant = Number($('compra-cantidad').value)||0;
+  const precio = Number($('compra-precio').value)||0;
+  const fecha = $('compra-fecha').value || today();
+  if(cant <= 0 || precio <= 0) { toast('Completa cantidad y precio', 'error'); return; }
+  const compras = DB.get('compras');
+  compras.push({ id: uid(), fecha, producto: productoCompraSelected.nombre, productoId: productoCompraSelected.id, cantidad: cant, precioCompra: precio, total: cant * precio });
+  DB.set('compras', compras);
+  // Actualizar stock y precio
+  const productos = DB.get('productos');
+  const i = productos.findIndex(p => String(p.id) === String(productoCompraSelected.id));
+  if(i >= 0) { productos[i].cantidad += cant; productos[i].precioCompra = precio; }
+  DB.set('productos', productos);
+  toast(`Compra registrada: +${cant} unidades de ${productoCompraSelected.nombre}`);
+  limpiarCompra();
+}
+
+function limpiarCompra() {
+  productoCompraSelected = null;
+  $('compra-prod-buscar').value = '';
+  $('compra-resultados').innerHTML = '';
+  $('compra-cantidad').value = 1;
+  $('compra-precio').value = '';
+  $('compra-cantidad-group').style.display = 'none';
+  $('compra-precio-group').style.display = 'none';
+  $('compra-selected-info').innerHTML = '';
+  $('compra-fecha').value = today();
+}
+
+// ===== GASTOS =====
+function registrarGasto() {
+  const fecha = $('gasto-fecha').value || today();
+  const concepto = $('gasto-concepto').value.trim();
+  const valor = Number($('gasto-valor').value)||0;
+  const cat = $('gasto-cat').value;
+  if(!concepto) { toast('Escribe el concepto del gasto', 'error'); return; }
+  if(valor <= 0) { toast('Ingresa un valor válido', 'error'); return; }
+  const gastos = DB.get('gastos');
+  gastos.push({ id: uid(), fecha, categoria: cat, concepto, valor });
+  DB.set('gastos', gastos);
+  toast(`Gasto registrado: ${fmt(valor)}`);
+  limpiarGasto();
+}
+
+function limpiarGasto() {
+  $('gasto-fecha').value = today();
+  $('gasto-concepto').value = '';
+  $('gasto-valor').value = '';
+  $('gasto-cat').value = 'Arriendo';
+}
+
+// ===== SERVICIOS =====
+function renderServiciosReg() {
+  const q = $('srv-buscar')?.value.toLowerCase() || '';
+  const cat = $('srv-cat-reg')?.value || '';
+  const servicios = DB.get('servicios').filter(s => s.estado === 'activo' && s.nombre.toLowerCase().includes(q) && (!cat || s.categoria === cat));
+  const grid = $('servicios-reg-grid');
+  if(!servicios.length) { grid.innerHTML = '<p class="text-muted" style="padding:24px">No hay servicios disponibles</p>'; return; }
+  grid.innerHTML = servicios.map(s => `
+    <div onclick="abrirSrvRapido('${s.id}')" style="background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;cursor:pointer;transition:all 0.15s;" onmouseover="this.style.borderColor='var(--accent)';this.style.background='rgba(245,200,66,0.05)'" onmouseout="this.style.borderColor='var(--border)';this.style.background='var(--surface)'">
+      <div style="font-size:11px;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:6px;">${s.categoria}</div>
+      <div style="font-weight:600;font-size:14px;margin-bottom:8px;">${s.nombre}</div>
+      <div style="font-family:'Syne',sans-serif;font-size:20px;font-weight:700;color:var(--accent)">${fmt(s.precio)}</div>
+    </div>
+  `).join('');
+}
+
+function abrirSrvRapido(id) {
+  const s = DB.get('servicios').find(x => String(x.id) === String(id));
+  if(!s) return;
+  $('srv-rapido-id').value = s.id;
+  $('srv-rapido-titulo').textContent = s.nombre;
+  $('srv-rapido-valor').value = s.precio;
+  $('srv-rapido-cant').value = 1;
+  $('srv-rapido-obs').value = '';
+  $('srv-rapido-info').innerHTML = `<div class="alert alert-success" style="margin:0"><strong>${s.nombre}</strong><br>Categoría: ${s.categoria} | Precio base: ${fmt(s.precio)}</div>`;
+  calcularSrvRapido();
+  $('modal-srv-rapido').classList.add('open');
+}
+
+function calcularSrvRapido() {
+  const val = Number($('srv-rapido-valor').value)||0;
+  const cant = Number($('srv-rapido-cant').value)||1;
+  const id = $('srv-rapido-id').value;
+  const s = DB.get('servicios').find(x => String(x.id) === String(id));
+  const costo = s ? (s.costo||0) * cant : 0;
+  const total = val * cant;
+  const gan = total - costo;
+  $('srv-rapido-calculo').innerHTML = `
+    <div class="two-col">
+      <div class="card" style="padding:14px"><div class="card-label">Total a cobrar</div><div class="card-value accent" style="font-size:22px">${fmt(total)}</div></div>
+      <div class="card" style="padding:14px"><div class="card-label">Ganancia</div><div class="card-value success" style="font-size:22px">${fmt(gan)}</div></div>
+    </div>`;
+}
+
+function registrarServicioRapido() {
+  const id = $('srv-rapido-id').value;
+  const s = DB.get('servicios').find(x => String(x.id) === String(id));
+  if(!s) return;
+  const val = Number($('srv-rapido-valor').value)||0;
+  const cant = Number($('srv-rapido-cant').value)||1;
+  const obs = $('srv-rapido-obs').value;
+  const total = val * cant;
+  const costo = (s.costo||0) * cant;
+  const gan = total - costo;
+  const reg = DB.get('servicios_reg');
+  reg.push({ id: uid(), fecha: today(), hora: timeNow(), servicio: s.nombre, servicioId: s.id, categoria: s.categoria, cantidad: cant, valorUnitario: val, valor: total, costo, ganancia: gan, observacion: obs });
+  DB.set('servicios_reg', reg);
+  cerrarModal('modal-srv-rapido');
+  toast(`Servicio registrado: ${fmt(total)}`);
+}
+
+// ===== CATÁLOGO SERVICIOS =====
+function renderCatalogoServicios() {
+  const q = $('cat-buscar')?.value.toLowerCase() || '';
+  const cat = $('cat-filtro-cat')?.value || '';
+  const servicios = DB.get('servicios').filter(s => s.nombre.toLowerCase().includes(q) && (!cat || s.categoria === cat));
+  const tbody = $('tabla-cat-servicios');
+  if(!servicios.length) { tbody.innerHTML = '<tr><td colspan="7"><div class="empty-state"><div class="icon">⚡</div><p>No hay servicios</p></div></td></tr>'; return; }
+  tbody.innerHTML = servicios.map(s => {
+    const util = (s.precio||0) - (s.costo||0);
+    return `<tr>
+      <td><strong>${s.nombre}</strong></td>
+      <td><span class="tag">${s.categoria||'—'}</span></td>
+      <td>${fmt(s.precio)}</td>
+      <td>${fmt(s.costo)}</td>
+      <td style="color:var(--success)">${fmt(util)}</td>
+      <td><span class="badge ${s.estado==='activo'?'badge-success':'badge-danger'}">${s.estado}</span></td>
+      <td>
+        <button class="btn btn-icon" onclick="editarServicio('${s.id}')">✏️</button>
+        <button class="btn btn-icon" onclick="eliminarServicio('${s.id}')" style="margin-left:4px">🗑️</button>
+      </td>
+    </tr>`;
+  }).join('');
+  poblarFiltrosCategorias();
+}
+
+function abrirModalServicio() {
+  $('srv-id').value = '';
+  $('srv-nombre').value = '';
+  $('srv-categoria').value = '';
+  $('srv-precio').value = '';
+  $('srv-costo').value = '';
+  $('srv-estado').value = 'activo';
+  $('modal-srv-titulo').textContent = 'Nuevo servicio';
+  $('modal-servicio').classList.add('open');
+}
+
+function editarServicio(id) {
+  const s = DB.get('servicios').find(x => String(x.id) === String(id));
+  if(!s) return;
+  $('srv-id').value = s.id;
+  $('srv-nombre').value = s.nombre;
+  $('srv-categoria').value = s.categoria||'';
+  $('srv-precio').value = s.precio||0;
+  $('srv-costo').value = s.costo||0;
+  $('srv-estado').value = s.estado||'activo';
+  $('modal-srv-titulo').textContent = 'Editar servicio';
+  $('modal-servicio').classList.add('open');
+}
+
+function guardarServicio() {
+  const nombre = $('srv-nombre').value.trim();
+  if(!nombre) { toast('El nombre es obligatorio', 'error'); return; }
+  const servicios = DB.get('servicios');
+  const id = $('srv-id').value;
+  const srv = { id: id || uid(), nombre, categoria: $('srv-categoria').value.trim(), precio: Number($('srv-precio').value)||0, costo: Number($('srv-costo').value)||0, estado: $('srv-estado').value };
+  if(id) { const i = servicios.findIndex(s => String(s.id) === String(id)); if(i>=0) servicios[i] = srv; }
+  else servicios.push(srv);
+  DB.set('servicios', servicios);
+  cerrarModal('modal-servicio');
+  renderCatalogoServicios();
+  toast(id ? 'Servicio actualizado' : 'Servicio creado');
+  poblarFiltrosCategorias();
+}
+
+function eliminarServicio(id) {
+  if(!confirm('¿Eliminar este servicio?')) return;
+  DB.set('servicios', DB.get('servicios').filter(s => String(s.id) !== String(id)));
+  renderCatalogoServicios();
+  toast('Servicio eliminado', 'warn');
+}
+
+// ===== HISTORIALES =====
+function filtrarPorFecha(arr, desdeId, hastaId) {
+  const desde = $(desdeId)?.value;
+  const hasta = $(hastaId)?.value;
+  return arr.filter(r => (!desde || r.fecha >= desde) && (!hasta || r.fecha <= hasta));
+}
+
+function renderHistVentas() {
+  const data = filtrarPorFecha(DB.get('ventas'), 'hv-desde', 'hv-hasta').reverse();
+  const tbody = $('tabla-hist-ventas');
+  tbody.innerHTML = data.length ? data.map(v => {
+    const tipo = v.tipo || 'Producto';
+    const badge = tipo === 'Servicio' ? 'badge-info' : 'badge-success';
+    return `<tr><td>${v.fecha}</td><td>${v.hora}</td><td><span class="badge ${badge}">${tipo}</span></td><td>${v.producto}</td><td>${v.cantidad}</td><td>${fmt(v.precioUnitario)}</td><td><strong>${fmt(v.total)}</strong></td><td style="color:var(--success)">${fmt(v.ganancia)}</td></tr>`;
+  }).join('') : '<tr><td colspan="8" class="text-muted" style="padding:20px;text-align:center">Sin registros</td></tr>';
+  const tot = data.reduce((a,v)=>a+v.total,0), gan = data.reduce((a,v)=>a+v.ganancia,0);
+  const numServ = data.filter(v=>(v.tipo==='Servicio')).length;
+  const numProd = data.length - numServ;
+  $('hv-totales').innerHTML = `<div class="cards-grid mt-16"><div class="card"><div class="card-label">Total ingresos</div><div class="card-value accent">${fmt(tot)}</div></div><div class="card"><div class="card-label">Ganancia total</div><div class="card-value success">${fmt(gan)}</div></div><div class="card"><div class="card-label">Productos vendidos</div><div class="card-value">${numProd}</div></div><div class="card"><div class="card-label">Servicios prestados</div><div class="card-value">${numServ}</div></div></div>`;
+}
+
+function renderHistServicios() {
+  const data = filtrarPorFecha(DB.get('servicios_reg'), 'hs-desde', 'hs-hasta').reverse();
+  const tbody = $('tabla-hist-servicios');
+  tbody.innerHTML = data.length ? data.map(s => `<tr><td>${s.fecha}</td><td>${s.hora}</td><td>${s.servicio}</td><td><span class="tag">${s.categoria}</span></td><td><strong>${fmt(s.valor)}</strong></td><td style="color:var(--success)">${fmt(s.ganancia)}</td></tr>`).join('') : '<tr><td colspan="6" class="text-muted" style="padding:20px;text-align:center">Sin registros</td></tr>';
+  const tot = data.reduce((a,s)=>a+s.valor,0), gan = data.reduce((a,s)=>a+s.ganancia,0);
+  $('hs-totales').innerHTML = `<div class="cards-grid mt-16"><div class="card"><div class="card-label">Total servicios</div><div class="card-value accent">${fmt(tot)}</div></div><div class="card"><div class="card-label">Ganancia total</div><div class="card-value success">${fmt(gan)}</div></div><div class="card"><div class="card-label">Servicios registrados</div><div class="card-value">${data.length}</div></div></div>`;
+}
+
+function renderHistCompras() {
+  const data = filtrarPorFecha(DB.get('compras'), 'hc-desde', 'hc-hasta').reverse();
+  $('tabla-hist-compras').innerHTML = data.length ? data.map(c => `<tr><td>${c.fecha}</td><td>${c.producto}</td><td>${c.cantidad}</td><td>${fmt(c.precioCompra)}</td><td><strong>${fmt(c.total)}</strong></td></tr>`).join('') : '<tr><td colspan="5" class="text-muted" style="padding:20px;text-align:center">Sin registros</td></tr>';
+}
+
+function renderHistGastos() {
+  const data = filtrarPorFecha(DB.get('gastos'), 'hg-desde', 'hg-hasta').reverse();
+  $('tabla-hist-gastos').innerHTML = data.length ? data.map(g => `<tr><td>${g.fecha}</td><td><span class="tag">${g.categoria}</span></td><td>${g.concepto}</td><td><strong>${fmt(g.valor)}</strong></td></tr>`).join('') : '<tr><td colspan="4" class="text-muted" style="padding:20px;text-align:center">Sin registros</td></tr>';
+  const tot = data.reduce((a,g)=>a+g.valor,0);
+  $('hg-totales').innerHTML = `<div class="cards-grid mt-16"><div class="card"><div class="card-label">Total gastos</div><div class="card-value danger">${fmt(tot)}</div></div><div class="card"><div class="card-label">Gastos registrados</div><div class="card-value">${data.length}</div></div></div>`;
+}
+
+// ===== REPORTES =====
+function getPeriodoFechas() {
+  const per = $('rep-periodo').value;
+  const hoy = today();
+  if(per === 'hoy') return { desde: hoy, hasta: hoy };
+  if(per === 'semana') {
+    const d = new Date(); d.setDate(d.getDate() - d.getDay());
+    return { desde: d.toISOString().split('T')[0], hasta: hoy };
+  }
+  if(per === 'mes') return { desde: hoy.slice(0,7)+'-01', hasta: hoy };
+  return { desde: $('rep-desde').value, hasta: $('rep-hasta').value };
+}
+
+function renderReportes() {
+  const per = $('rep-periodo').value;
+  $('rep-desde').style.display = per==='custom'?'':'none';
+  $('rep-hasta').style.display = per==='custom'?'':'none';
+  $('rep-aplicar').style.display = per==='custom'?'':'none';
+  const {desde, hasta} = getPeriodoFechas();
+  const filtro = arr => arr.filter(r => (!desde||r.fecha>=desde) && (!hasta||r.fecha<=hasta));
+  const ventas = filtro(DB.get('ventas'));
+  const srvReg = filtro(DB.get('servicios_reg'));
+  const gastos = filtro(DB.get('gastos'));
+
+  const totalVentas = ventas.reduce((a,v)=>a+v.total,0);
+  const totalSrv = srvReg.reduce((a,s)=>a+s.valor,0);
+  const totalGastos = gastos.reduce((a,g)=>a+g.valor,0);
+  const ganBruta = ventas.reduce((a,v)=>a+v.ganancia,0) + srvReg.reduce((a,s)=>a+s.ganancia,0);
+  const ganNeta = ganBruta - totalGastos;
+
+  $('rep-cards').innerHTML = `
+    <div class="card"><div class="card-label">Ingresos totales</div><div class="card-value accent">${fmt(totalVentas+totalSrv)}</div><div class="card-sub">Ventas: ${fmt(totalVentas)} | Servicios: ${fmt(totalSrv)}</div></div>
+    <div class="card"><div class="card-label">Gastos totales</div><div class="card-value danger">${fmt(totalGastos)}</div></div>
+    <div class="card"><div class="card-label">Ganancia bruta</div><div class="card-value success">${fmt(ganBruta)}</div></div>
+    <div class="card"><div class="card-label">Ganancia neta</div><div class="card-value ${ganNeta>=0?'success':'danger'}">${fmt(ganNeta)}</div></div>
+  `;
+
+  // Top productos
+  const prodMap = {};
+  ventas.forEach(v => { if(!prodMap[v.producto]) prodMap[v.producto]={cant:0,ing:0}; prodMap[v.producto].cant+=v.cantidad; prodMap[v.producto].ing+=v.total; });
+  const topProd = Object.entries(prodMap).sort((a,b)=>b[1].cant-a[1].cant).slice(0,10);
+  $('rep-top-productos').innerHTML = topProd.length ? topProd.map(([n,d])=>`<tr><td>${n}</td><td><strong>${fmtNum(d.cant)}</strong></td><td>${fmt(d.ing)}</td></tr>`).join('') : '<tr><td colspan="3" class="text-muted" style="padding:16px">Sin datos</td></tr>';
+
+  // Top servicios
+  const srvMap = {};
+  srvReg.forEach(s => { if(!srvMap[s.servicio]) srvMap[s.servicio]={cnt:0,ing:0}; srvMap[s.servicio].cnt++; srvMap[s.servicio].ing+=s.valor; });
+  const topSrv = Object.entries(srvMap).sort((a,b)=>b[1].cnt-a[1].cnt).slice(0,10);
+  $('rep-top-servicios').innerHTML = topSrv.length ? topSrv.map(([n,d])=>`<tr><td>${n}</td><td><strong>${d.cnt}</strong></td><td>${fmt(d.ing)}</td></tr>`).join('') : '<tr><td colspan="3" class="text-muted" style="padding:16px">Sin datos</td></tr>';
+
+  // Gastos por categoría
+  const gasMap = {};
+  gastos.forEach(g => { if(!gasMap[g.categoria]) gasMap[g.categoria]=0; gasMap[g.categoria]+=g.valor; });
+  const topGas = Object.entries(gasMap).sort((a,b)=>b[1]-a[1]);
+  $('rep-gastos-cat').innerHTML = topGas.length ? topGas.map(([cat,tot])=>`<tr><td><span class="tag">${cat}</span></td><td><strong>${fmt(tot)}</strong></td></tr>`).join('') : '<tr><td colspan="2" class="text-muted" style="padding:16px">Sin gastos registrados</td></tr>';
+}
+
+// ===== EXPORTAR CSV =====
+function exportarCSV(tipo) {
+  const data = DB.get(tipo === 'ventas' ? 'ventas' : tipo === 'servicios' ? 'servicios_reg' : tipo === 'compras' ? 'compras' : 'gastos');
+  if(!data.length) { toast('No hay datos para exportar', 'warn'); return; }
+  const keys = Object.keys(data[0]).filter(k => k !== 'id' && k !== 'productoId' && k !== 'servicioId');
+  const csv = [keys.join(','), ...data.map(r => keys.map(k => `"${r[k]||''}"`).join(','))].join('\n');
+  const blob = new Blob([csv], {type:'text/csv'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${tipo}_${today()}.csv`;
+  a.click();
+  toast('Exportado correctamente');
+}
+
+// ===== IMPRIMIR REPORTE =====
+function imprimirReporte() { window.print(); }
+
+// ===== MODALES =====
+function cerrarModal(id) { $(id).classList.remove('open'); }
+document.querySelectorAll('.modal-overlay').forEach(m => {
+  m.addEventListener('click', e => { if(e.target === m) m.classList.remove('open'); });
+});
+
+// ===== INIT =====
+document.addEventListener('DOMContentLoaded', init);
+
+
+// ════════════════════════════════════════════════
+// UNIFICACION SERVICIOS -> INVENTARIO (como productos tipo servicio)
+// ════════════════════════════════════════════════
+function integrarServiciosEnInventario(silencioso){
+  var productos = DB.get('productos');
+  var servicios = DB.get('servicios');
+  var porNombre = {};
+  productos.forEach(function(p){ porNombre[(p.nombre||'').toLowerCase().trim()] = p; });
+
+  var agregados = 0;
+  servicios.forEach(function(s, i){
+    var key = (s.nombre||'').toLowerCase().trim();
+    if(!porNombre[key]){
+      productos.push({
+        id: Date.now() + 90000 + i,
+        nombre: s.nombre,
+        categoria: s.categoria || 'Servicios',
+        precioCompra: 0,
+        precioVenta: (s.precio!=null ? s.precio : 0),
+        cantidad: 1,
+        stockMin: 0,
+        estado: 'activo',
+        esServicio: true
+      });
+      agregados++;
+    }
+  });
+  DB.set('productos', productos);
+  try { if(typeof renderInventario==='function') renderInventario(); } catch(e){}
+  if(!silencioso){
+    try { if(typeof toast==='function') toast('Servicios integrados al inventario: ' + agregados + ' nuevos', 'success'); } catch(e){}
+  }
+  return agregados;
+}
+
+// ════════════════════════════════════════════════
+// RECARGA DE INVENTARIO — Factura 2026-06-03
+// ════════════════════════════════════════════════
+function recargarInventarioFactura(silencioso){
+  // Reconstruye la lista de productos desde PRODUCTOS_DEFAULT (que ya trae la factura),
+  // preservando ids/cantidades de productos que el usuario haya creado manualmente y que
+  // no estén en la factura.
+  var actuales = DB.get('productos');
+  var porNombre = {};
+  actuales.forEach(function(p){ porNombre[(p.nombre||'').toLowerCase().trim()] = p; });
+
+  var resultado = PRODUCTOS_DEFAULT.map(function(pr, i){
+    var key = pr.nombre.toLowerCase().trim();
+    var prev = porNombre[key];
+    return {
+      id: (prev && prev.id) ? prev.id : (Date.now() + 80000 + i),
+      nombre: pr.nombre,
+      categoria: pr.categoria,
+      precioCompra: pr.precioCompra,
+      precioVenta: pr.precioVenta,
+      cantidad: pr.cantidad,
+      stockMin: pr.stockMin,
+      estado: pr.estado
+    };
+  });
+
+  // Conservar productos extra creados por el usuario que no están en la factura
+  var nombresFactura = {};
+  PRODUCTOS_DEFAULT.forEach(function(pr){ nombresFactura[pr.nombre.toLowerCase().trim()] = true; });
+  actuales.forEach(function(p){
+    if(!nombresFactura[(p.nombre||'').toLowerCase().trim()]){
+      resultado.push(p);
+    }
+  });
+
+  DB.set('productos', resultado);
+  try { if(typeof renderInventario==='function') renderInventario(); } catch(e){}
+  try { if(typeof renderDashboard==='function') renderDashboard(); } catch(e){}
+  if(!silencioso){
+    try { if(typeof toast==='function') toast('Inventario recargado: ' + PRODUCTOS_DEFAULT.length + ' productos con precios y stock de la factura', 'success'); } catch(e){}
+  }
+}
+
+// Auto-restauración desactivada — los datos se guardan en localStorage sin sobrescribirse
+
+// ════════════════════════════════════════════════
+// QUE COMPRAR — Ranking y lista de recompra
+// ════════════════════════════════════════════════
+function renderQueComprar() {
+  const periodo = $('cp-periodo') ? $('cp-periodo').value : 'todo';
+  const hoy = today();
+  const ventas = DB.get('ventas').filter(v => {
+    if(periodo === 'todo') return true;
+    if(periodo === 'mes') return v.fecha >= hoy.slice(0,7) + '-01';
+    if(periodo === 'semana') {
+      const d = new Date(); d.setDate(d.getDate() - 7);
+      return v.fecha >= d.toISOString().split('T')[0];
+    }
+    return true;
+  });
+
+  // SOLO productos reales (no servicios) y activos
+  const productos = DB.get('productos').filter(p => !p.esServicio && p.estado === 'activo');
+
+  // Cuantas veces se vendio cada producto
+  const vendMap = {};
+  ventas.forEach(v => {
+    if(!vendMap[v.producto]) vendMap[v.producto] = 0;
+    vendMap[v.producto] += (v.cantidad || 1);
+  });
+
+  // Un producto es "relevante" si: tiene stock > 0, O ha sido vendido alguna vez
+  // Productos con stock 0 que NUNCA se vendieron = nunca los has tenido = se ignoran en urgente y exportacion
+  const todosConVentas = DB.get('ventas').reduce((acc, v) => { acc[v.producto] = true; return acc; }, {});
+
+  const ranking = productos.map(p => ({
+    ...p,
+    vecesVendido: vendMap[p.nombre] || 0,
+    algunaVezVendido: !!todosConVentas[p.nombre],
+    algunaVezEnStock: p.cantidad > 0 || !!todosConVentas[p.nombre]
+  })).sort((a,b) => b.vecesVendido - a.vecesVendido);
+
+  // Solo "relevantes": tienen stock o han sido vendidos
+  const relevantes = ranking.filter(p => p.algunaVezEnStock);
+
+  // Cards resumen (solo relevantes)
+  const agotados = relevantes.filter(p => p.cantidad === 0).length;
+  const stockBajo = relevantes.filter(p => p.cantidad > 0 && p.cantidad <= (p.stockMin||0)).length;
+  const conVentas = relevantes.filter(p => p.vecesVendido > 0).length;
+  if($('cp-cards')) $('cp-cards').innerHTML = `
+    <div class="card"><div class="card-label">Productos con ventas</div><div class="card-value accent">${conVentas}</div></div>
+    <div class="card"><div class="card-label">Agotados (recomprar)</div><div class="card-value danger">${agotados}</div></div>
+    <div class="card"><div class="card-label">Stock bajo</div><div class="card-value" style="color:var(--accent)">${stockBajo}</div></div>
+    <div class="card"><div class="card-label">Productos activos</div><div class="card-value">${relevantes.length}</div></div>
+  `;
+
+  // Ranking top 15 (solo relevantes, ordenados por vendidos)
+  const top15 = relevantes.slice(0, 15);
+  const rankingHTML = top15.length ? top15.map((p, i) => {
+    let prioridad, color;
+    if(p.cantidad === 0 && p.algunaVezVendido) { prioridad = '🔴 Urgente'; color = 'var(--danger)'; }
+    else if(p.cantidad <= (p.stockMin||5) && p.cantidad > 0) { prioridad = '🟡 Pronto'; color = 'var(--accent)'; }
+    else if(p.vecesVendido > 0) { prioridad = '🟢 OK'; color = 'var(--success)'; }
+    else { prioridad = '⚪ Sin ventas'; color = 'var(--muted)'; }
+    return `<tr>
+      <td><strong>${i+1}</strong></td>
+      <td>${p.nombre}</td>
+      <td><strong>${fmtNum(p.vecesVendido)}</strong></td>
+      <td style="color:${p.cantidad===0?'var(--danger)':p.cantidad<=(p.stockMin||5)?'var(--accent)':'var(--success)'}">${p.cantidad === 0 ? 'Agotado' : p.cantidad}</td>
+      <td style="color:${color}">${prioridad}</td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="5" class="text-muted" style="padding:20px;text-align:center">Registra ventas para ver el ranking.</td></tr>';
+  if($('cp-ranking')) $('cp-ranking').innerHTML = rankingHTML;
+
+  // Urgentes: SOLO productos relevantes que esten agotados o con stock bajo
+  const urgentes = relevantes.filter(p => p.cantidad === 0 || p.cantidad <= (p.stockMin||5));
+  const urgenteHTML = urgentes.length ? urgentes.map(p => {
+    const badge = p.cantidad === 0 ? '<span class="badge badge-danger">Agotado</span>' : '<span class="badge badge-warn">Stock bajo</span>';
+    return `<tr>
+      <td><strong>${p.nombre}</strong></td>
+      <td>${badge} ${p.cantidad}</td>
+      <td>${fmtNum(p.vecesVendido)}</td>
+      <td><button class="btn btn-sm btn-secondary" onclick="navigate('inventario');setTimeout(()=>{$('inv-buscar').value='${p.nombre.replace(/'/g,"\\'")}';renderInventario();},200)">Editar stock</button></td>
+    </tr>`;
+  }).join('') : '<tr><td colspan="4" style="padding:16px;text-align:center;color:var(--success)">Todo en orden.</td></tr>';
+  if($('cp-urgente')) $('cp-urgente').innerHTML = urgenteHTML;
+
+  // Lista completa: solo relevantes, ordenados por urgencia
+  const listaCompleta = [...relevantes].sort((a,b) => {
+    const prio = p => {
+      if(p.cantidad === 0 && p.vecesVendido > 0) return 1;
+      if(p.cantidad <= (p.stockMin||5) && p.vecesVendido > 0) return 2;
+      if(p.cantidad === 0) return 3;
+      if(p.cantidad <= (p.stockMin||5)) return 4;
+      if(p.vecesVendido > 0) return 5;
+      return 6;
+    };
+    return prio(a) - prio(b) || b.vecesVendido - a.vecesVendido;
+  });
+
+  const listaHTML = listaCompleta.map(p => {
+    const sugerido = p.cantidad === 0 ? Math.max(p.stockMin||5, p.vecesVendido||5) :
+                     p.cantidad <= (p.stockMin||5) ? (p.stockMin||5) - p.cantidad + (p.vecesVendido > 0 ? Math.ceil(p.vecesVendido * 0.5) : 0) : 0;
+    const rowStyle = p.cantidad === 0 ? 'background:rgba(224,92,92,0.06)' : p.cantidad<=(p.stockMin||5) ? 'background:rgba(245,200,66,0.06)' : '';
+    return `<tr style="${rowStyle}">
+      <td>${p.nombre}</td>
+      <td><span class="tag">${p.categoria}</span></td>
+      <td style="color:${p.cantidad===0?'var(--danger)':p.cantidad<=(p.stockMin||5)?'var(--accent)':'var(--success)'}">${p.cantidad === 0 ? 'Agotado' : p.cantidad}</td>
+      <td>${p.stockMin || 5}</td>
+      <td>${fmtNum(p.vecesVendido)}</td>
+      <td>${p.precioCompra > 0 ? fmt(p.precioCompra) : '—'}</td>
+      <td><strong style="color:${sugerido > 0 ? 'var(--accent)' : 'var(--muted)'}">${sugerido > 0 ? sugerido + ' unidades' : '—'}</strong></td>
+    </tr>`;
+  }).join('');
+  if($('cp-lista-completa')) $('cp-lista-completa').innerHTML = listaHTML || '<tr><td colspan="7" style="padding:20px;text-align:center;color:var(--muted)">Sin productos relevantes aun. Registra ventas para activar el modulo.</td></tr>';
+}
+
+function exportarListaCompra() {
+  const productos = DB.get('productos').filter(p => !p.esServicio && p.estado === 'activo');
+  const todasVentas = DB.get('ventas');
+  const vendMap = {};
+  todasVentas.forEach(v => { if(!vendMap[v.producto]) vendMap[v.producto]=0; vendMap[v.producto]+=(v.cantidad||1); });
+  const algunaVezVendido = todasVentas.reduce((acc, v) => { acc[v.producto] = true; return acc; }, {});
+
+  // Solo exportar productos relevantes: tienen stock O han sido vendidos
+  const filas = productos
+    .filter(p => p.cantidad > 0 || algunaVezVendido[p.nombre])
+    .map(p => ({ ...p, vecesVendido: vendMap[p.nombre]||0 }))
+    .filter(p => p.cantidad === 0 || p.cantidad <= (p.stockMin||5) || p.vecesVendido > 0)
+    .sort((a,b) => {
+      const prio = p => p.cantidad===0&&p.vecesVendido>0?1:p.cantidad<=(p.stockMin||5)&&p.vecesVendido>0?2:p.cantidad===0?3:p.cantidad<=(p.stockMin||5)?4:5;
+      return prio(a)-prio(b)||b.vecesVendido-a.vecesVendido;
+    });
+
+  const sugerido = p => p.cantidad===0 ? Math.max(p.stockMin||5,p.vecesVendido||5) :
+    p.cantidad<=(p.stockMin||5) ? (p.stockMin||5)-p.cantidad+Math.ceil(p.vecesVendido*0.5) : 0;
+
+  const csv = [
+    ['Producto','Stock actual','Stock minimo','Veces vendido','Precio compra','Sugerido comprar','Costo estimado'].join(','),
+    ...filas.map(p => {
+      const sug = sugerido(p);
+      return [`"${p.nombre}"`,p.cantidad,p.stockMin||5,p.vecesVendido,p.precioCompra,sug,sug*p.precioCompra].join(',');
+    })
+  ].join('\n');
+
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'lista_compra_' + today() + '.csv';
+  a.click();
+  try { if(typeof toast==='function') toast('Lista exportada: ' + filas.length + ' productos relevantes', 'success'); } catch(e){}
+}
+
+// ════════════════════════════════════════════════
+// ACCESOS RAPIDOS — pantalla de registro de ventas
+// ════════════════════════════════════════════════
+const ACCESOS_DEFAULTS = ["Fotocopia blanco y negro carta", "Fotocopia a color carta", "Impresion blanco y negro carta", "Impresion a color carta", "Impresion fotografica 10x15 cm", "Recarga de toner / cartucho", "Lapiz Norma", "Lapicero Kilometrico 100 negro", "Corrector Lapiz Offiesco OE-250 8ml", "Borrador 612 (caja x12)"];
+
+function renderAccesosRapidos() {
+  const ventas = DB.get('ventas');
+  const productos = DB.get('productos').filter(p => p.estado === 'activo');
+
+  // Calcular ranking por nombre
+  const vendMap = {};
+  ventas.forEach(v => { vendMap[v.producto] = (vendMap[v.producto]||0) + (v.cantidad||1); });
+
+  // Ordenar productos: primero los más vendidos, luego los defaults si no hay ventas
+  let candidatos;
+  if(ventas.length > 0) {
+    // Con historial: ordenar por ventas desc, tomar top 20
+    candidatos = productos
+      .map(p => ({ ...p, veces: vendMap[p.nombre]||0 }))
+      .sort((a,b) => b.veces - a.veces)
+      .slice(0, 10);
+  } else {
+    // Sin historial: usar lista por defecto, buscar en inventario
+    const defaultNombres = ACCESOS_DEFAULTS;
+    candidatos = [];
+    defaultNombres.forEach(nombre => {
+      const p = productos.find(x => x.nombre === nombre);
+      if(p) candidatos.push({ ...p, veces: 0 });
+    });
+    // Completar hasta 20 con servicios primero (impresiones/fotocopias) luego productos
+    const yaIncluidos = new Set(candidatos.map(p => p.id));
+    const extras = productos
+      .filter(p => !yaIncluidos.has(p.id))
+      .sort((a,b) => (b.esServicio?1:0)-(a.esServicio?1:0))
+      .slice(0, 10 - candidatos.length);
+    candidatos = [...candidatos, ...extras.map(p => ({ ...p, veces: 0 }))];
+  }
+
+  const container = $('accesos-rapidos');
+  if(!container) return;
+  if(!candidatos.length) {
+    container.innerHTML = '<p style="color:var(--muted);font-size:13px">No hay productos en inventario aun.</p>';
+    return;
+  }
+
+  container.innerHTML = candidatos.map(p => {
+    const precio = fmt(p.precioVenta);
+    const badge = p.esServicio ? '⚡ Servicio' : (p.veces > 0 ? `↑ ${p.veces} vendido(s)` : '');
+    const nombre = p.nombre.length > 28 ? p.nombre.slice(0,26)+'…' : p.nombre;
+    return `<button class="acceso-btn" onclick="seleccionarProductoVenta('${p.id}')" title="${p.nombre}">
+      <span class="acc-nombre">${nombre}</span>
+      <span class="acc-precio">${precio}</span>
+      ${badge ? `<span class="acc-badge">${badge}</span>` : ''}
+    </button>`;
+  }).join('');
+}
+
+// ════════════════════════════════════════════════
+// RESPALDO DE DATOS — Guardar y Restaurar
+// ════════════════════════════════════════════════
+function guardarCopia() {
+  try {
+    const copia = {
+      version: '1.0',
+      fecha: today(),
+      hora: timeNow(),
+      productos:    DB.get('productos'),
+      servicios:    DB.get('servicios'),
+      ventas:       DB.get('ventas'),
+      servicios_reg: DB.get('servicios_reg'),
+      compras:      DB.get('compras'),
+      gastos:       DB.get('gastos'),
+    };
+    const json = JSON.stringify(copia, null, 2);
+    const blob = new Blob([json], { type: 'application/json' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'papeleria_copia_' + today() + '.json';
+    a.click();
+    toast('✅ Copia guardada correctamente. Guardala en USB o WhatsApp.', 'success');
+  } catch(e) {
+    toast('Error al guardar la copia: ' + e.message, 'error');
+  }
+}
+
+function restaurarCopia(event) {
+  const archivo = event.target.files[0];
+  if(!archivo) return;
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    try {
+      const copia = JSON.parse(e.target.result);
+      if(!copia.version || !copia.productos) {
+        toast('El archivo no es una copia valida de PapeleriaPro.', 'error');
+        return;
+      }
+      const confirmar = confirm(
+        'Vas a restaurar una copia del ' + copia.fecha + '.\n\n' +
+        'Esto reemplazara TODO lo que tienes actualmente:\n' +
+        '- ' + (copia.productos||[]).length + ' productos\n' +
+        '- ' + (copia.ventas||[]).length + ' ventas registradas\n\n' +
+        '¿Estas seguro?'
+      );
+      if(!confirmar) return;
+      DB.set('productos',     copia.productos    || []);
+      DB.set('servicios',     copia.servicios    || []);
+      DB.set('ventas',        copia.ventas       || []);
+      DB.set('servicios_reg', copia.servicios_reg|| []);
+      DB.set('compras',       copia.compras      || []);
+      DB.set('gastos',        copia.gastos       || []);
+      // Resetear flags de carga para que no sobreescriba lo restaurado
+      localStorage.removeItem('inv_factura_20260603');
+      localStorage.removeItem('servicios_integrados_v1');
+      toast('✅ Copia restaurada correctamente. Todo volvio como estaba.', 'success');
+      setTimeout(() => { navigate('dashboard'); renderDashboard(); }, 500);
+    } catch(err) {
+      toast('Error al leer el archivo. Asegurate de que sea una copia valida.', 'error');
+    }
+  };
+  reader.readAsText(archivo);
+  // Limpiar el input para que se pueda volver a usar
+  event.target.value = '';
+}
+</script>
+</body>
+</html>
